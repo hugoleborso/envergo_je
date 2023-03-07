@@ -1,0 +1,4 @@
+# https://www.robotstxt.org/robotstxt.html
+User-agent: *
+Disallow:
+#Supposed to be for web crawlers, not needed here, maybe we can even delete it

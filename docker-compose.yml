@@ -1,0 +1,20 @@
+version: '3'
+services:  
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    image: api
+    depends_on:
+      - db
+
+  client:
+    build:
+      context: .
+      dockerfile: Dockerfile.client
+    image: client
+    depends_on:
+      - api
+    ports:
+      - "3000:80"
+
