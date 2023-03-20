@@ -1,9 +1,12 @@
-FROM python:3.9
-WORKDIR /app
+FROM python:3.11.2-alpine3.17
 
-COPY api/requirements.txt api/src/index.py api/.flaskenv ./
-RUN pip install -r ./requirements.txt
-ENV FLASK_DEBUG production
+WORKDIR /code
 
-EXPOSE 5001
-CMD ["gunicorn", "-b", ":5001", "index:app"]
+COPY ./requirements.txt /code/requirements.txt
+
+RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
+
+COPY ./api /code/app
+
+EXPOSE 80
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "80"]
