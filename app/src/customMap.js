@@ -85,11 +85,12 @@ class CustomMap extends Component {
   }
 
   fillSurroundingsParag(){
-    if (this.state.currentPos===null){this.setState({t_p:"No selected position yet."})}
-    else {this.setState({t_p: "You selected a position with lat = "+this.state.currentPos.lat+" and long = "+this.state.currentPos.lng+"."})}
-
-    if (this.state.currentAlt ===null){this.setState({t_a:"No altitude yet."})}
-    else {this.setState({t_a:"This point has an elevation of "+this.state.currentAlt+"."})}
+    if (this.state.surroundings ===null){this.setState({t_s:"No surroundings checked yet"})}
+    else {
+      let maxAlti = Math.max(...this.state.surroundings.map(o => o.z))
+      let minAlti = Math.min(...this.state.surroundings.map(o => o.z))
+      this.setState({t_s:"This zone has an max elevation of "+maxAlti+" and a min elevation of "+minAlti+"."})
+    }
   }
 
   render() {
