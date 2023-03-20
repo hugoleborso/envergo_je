@@ -60,7 +60,8 @@ class CustomMap extends Component {
   render() {
     return (
       <>
-      <h1>EnvErgo Front Test 2150</h1>
+      <h1>EnvErgo Front Test</h1>
+      <h2>Je t'aime mon chat gros bisous</h2>
       <div>
         <Map center={this.props.center} zoom={this.props.zoom} onClick={this.handleClick}>
           <TileLayer
