@@ -11,13 +11,14 @@ h2{
 }
 .leaflet-container {
   margin-top: 1vh;
-  height: 60vh;
+  height: 50vh;
   width: 80%;
   margin-left: 10%;
   margin-bottom: 2vh;
 }
 
-#info-p{
+.grey-p{
+  margin-bottom: 1%;
   margin-left: 10%;
   margin-right: 10%;
   background-color: darkgray;

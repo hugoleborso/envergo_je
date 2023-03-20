@@ -1,13 +1,15 @@
 import uvicorn
-import requests
 
 from fastapi import FastAPI
-from fastapi.encoders import jsonable_encoder
+# from fastapi.encoders import jsonable_encoder
 from fastapi.responses import RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
 
-from classes.coordinates import Point
+
+from classes.responses import SurroundingsResponse
 from classes.responses import AltiResponse
+from classes.coordinates import Point
+from classes.altiQuery import altiQuery
 
 
 
@@ -17,6 +19,7 @@ app = FastAPI(title="EnvErgo Test API")
 origins = [
     "*"
 ]
+
 
 app.add_middleware(
     CORSMiddleware,
@@ -35,27 +38,27 @@ def ping():
     return {"ping": "pong"}
 
 @app.get("/alti", status_code=200)
-async def store_search(lat: float, long: float):
-    # point = Point(lat=lat,long=long)
-    dataSet = 'SRTM_GL3'
+async def store_search(lat: float, long: float, api:str="IGN"):
     
-    query = f"https://api.elevationapi.com/api/Elevation?lat={lat}&lon={long}&dataSet={dataSet}"
-    api_response = requests.get(query).json()
-    res = AltiResponse(success=False,lat=lat,long=long,dataset=dataSet,alti=None)
+    altiQueryService = altiQuery("IGN")
+    res = AltiResponse(success=False,lat=lat,long=long,dataset=altiQueryService.dataSet,alti=None)
+    altiServiceResponse = altiQueryService.QueryOnePoint(lat,long)
     
-    if api_response["message"]=='OK':
+    if altiServiceResponse.error is None:
         res.success=True
-        res.lat=api_response["geoPoints"][0]["latitude"]
-        res.long=api_response["geoPoints"][0]["longitude"]
-        res.alti=api_response["geoPoints"][0]["elevation"]
-        res.dataset=api_response["dataSet"]["name"]
+        res.alti=altiServiceResponse.alti
+    else:
+        res.error=altiServiceResponse.error
     
     return res
 
 @app.get("/surroundings", status_code=200)
-async def store_search(lat: str, long: str):
-    print("Querying the IGN api")
-    return {"coordinates":"str(found)"}
+async def store_search(lat: str, long: str,sidePointsNb:int=11,separationDistance:int=100):
+    point = Point(lat,long)
+    pts = point.createSquareGridAround(sidePointsNb,separationDistance)
+    altiQueryService = altiQuery("IGN")
+    res = altiQueryService.QueryMultiplePoints(pts)
+    return SurroundingsResponse(success=True,points=res,dataset=altiQueryService.dataSet)
 
 
 if __name__ == "__main__":
