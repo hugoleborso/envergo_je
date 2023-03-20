@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { render } from 'react-dom';
-import Map from './Map';
+import Map from './customMap';
 import './style.css';
 
 const App = () => {

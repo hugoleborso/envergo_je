@@ -34,7 +34,7 @@ async def docs_redirect():
 def ping():
     return {"ping": "pong"}
 
-@app.get("/alti")
+@app.get("/alti", status_code=200)
 async def store_search(lat: float, long: float):
     # point = Point(lat=lat,long=long)
     dataSet = 'SRTM_GL3'
@@ -52,7 +52,7 @@ async def store_search(lat: float, long: float):
     
     return res
 
-@app.get("/surroundings")
+@app.get("/surroundings", status_code=200)
 async def store_search(lat: str, long: str):
     print("Querying the IGN api")
     return {"coordinates":"str(found)"}
