@@ -53,7 +53,7 @@ async def store_search(lat: float, long: float, api:str="IGN"):
     return res
 
 @app.get("/surroundings", status_code=200)
-async def store_search(lat: str, long: str,sidePointsNb:int=11,separationDistance:int=100):
+async def store_search(lat: str, long: str,sidePointsNb:int=10,separationDistance:int=100):
     point = Point(lat,long)
     pts = point.createSquareGridAround(sidePointsNb,separationDistance)
     altiQueryService = altiQuery("IGN")
