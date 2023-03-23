@@ -109,7 +109,16 @@ class CustomMap extends Component {
         <Map center={this.props.center} zoom={this.props.zoom} onClick={this.handleClick}>
           <LayersControl collapsed={false}>
             <LayersControl.BaseLayer name="Street View" checked>
-            <TileLayer url='https://{s}.tile.osm.org/{z}/{x}/{y}.png'/>
+              <TileLayer url='https://{s}.tile.osm.org/{z}/{x}/{y}.png'/> 
+            </LayersControl.BaseLayer>
+            <LayersControl.BaseLayer name="Topography 1" >
+              <TileLayer url='https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png'/> 
+            </LayersControl.BaseLayer>
+            <LayersControl.BaseLayer name="Topography 2" >
+              <TileLayer url='http://{s}.tile3.opencyclemap.org/landscape/{z}/{x}/{y}.png'/> 
+            </LayersControl.BaseLayer>
+            <LayersControl.BaseLayer name="Topography 3" >
+              <TileLayer url='https://tile.mapzen.com/mapzen/terrain/v1/geotiff/{z}/{x}/{y}.tif'/> 
             </LayersControl.BaseLayer>
             <LayersControl.BaseLayer name="Topography">
               <WMSTileLayer layers="TOPO-WMS" url="http://ows.mundialis.de/services/service?"/>
