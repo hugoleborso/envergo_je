@@ -5,7 +5,7 @@ import {Map, TileLayer, Popup, Marker, LayersControl, WMSTileLayer} from "react-
 class CustomMap extends Component {
   constructor(props) {
     super(props);
-    let fetchURL = "EC2urlAdress"
+    let fetchURL = "ec2-13-37-106-96.eu-west-3.compute.amazonaws.com"
     if (window.location.href.includes("localhost")){
       fetchURL = "localhost"
     }
