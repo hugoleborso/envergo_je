@@ -5,9 +5,9 @@ import {Map, TileLayer, Popup, Marker, LayersControl, WMSTileLayer} from "react-
 class CustomMap extends Component {
   constructor(props) {
     super(props);
-    let fetchURL = "ec2-13-37-106-96.eu-west-3.compute.amazonaws.com"
+    let fetchURL = "http://ec2-13-37-106-96.eu-west-3.compute.amazonaws.com"
     if (window.location.href.includes("localhost")){
-      fetchURL = "localhost"
+      fetchURL = "http://localhost"
     }
     this.state = {
       fetchURL:fetchURL,
@@ -18,7 +18,7 @@ class CustomMap extends Component {
       surroundings:[],
       t_s:"No surroundings checked yet"
     };
-    
+
     this.handleClick = this.handleClick.bind(this);
   }
 
@@ -37,7 +37,7 @@ class CustomMap extends Component {
     else if (response.success != false){
       this.setState({ currentAlt: response.alti});
       this.fillInfoParag();
-    } 
+    }
     else {
       console.log('r',response.success, true)
       alert('Error in the altitude query by success variable : see console')
@@ -54,7 +54,7 @@ class CustomMap extends Component {
       console.log(response.points)
       this.setState({ surroundings: response.points});
       this.fillSurroundingsParag();
-    } 
+    }
     else {
       console.log('r',response.success, true)
       alert('Error in the surroundings query by success variable : see console')
@@ -63,14 +63,14 @@ class CustomMap extends Component {
   }
 
   askAlti(){
-    let query = "http://"+this.state.fetchURL+"/alti?lat="+this.state.currentPos.lat+"&long="+this.state.currentPos.lng
+    let query = this.state.fetchURL+"/alti?lat="+this.state.currentPos.lat+"&long="+this.state.currentPos.lng
     fetch(query)
     .then((response) => response.json())
     .then((response) => {this.handleAltiResponse(response)});
   }
 
   askSurroundings(){
-    let query = "http://"+this.state.fetchURL+"/surroundings?lat="+this.state.currentPos.lat+"&long="+this.state.currentPos.lng
+    let query = this.state.fetchURL+"/surroundings?lat="+this.state.currentPos.lat+"&long="+this.state.currentPos.lng
     fetch(query)
     .then((response) => response.json())
     .then((response) => {this.handleSurroundingsResponse(response)});
@@ -109,16 +109,16 @@ class CustomMap extends Component {
         <Map center={this.props.center} zoom={this.props.zoom} onClick={this.handleClick}>
           <LayersControl collapsed={false}>
             <LayersControl.BaseLayer name="Street View" checked>
-              <TileLayer url='https://{s}.tile.osm.org/{z}/{x}/{y}.png'/> 
+              <TileLayer url='https://{s}.tile.osm.org/{z}/{x}/{y}.png'/>
             </LayersControl.BaseLayer>
             <LayersControl.BaseLayer name="Topography 1" >
-              <TileLayer url='https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png'/> 
+              <TileLayer url='https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png'/>
             </LayersControl.BaseLayer>
             <LayersControl.BaseLayer name="Topography 2" >
-              <TileLayer url='http://{s}.tile3.opencyclemap.org/landscape/{z}/{x}/{y}.png'/> 
+              <TileLayer url='http://{s}.tile3.opencyclemap.org/landscape/{z}/{x}/{y}.png'/>
             </LayersControl.BaseLayer>
             <LayersControl.BaseLayer name="Topography 3" >
-              <TileLayer url='https://tile.mapzen.com/mapzen/terrain/v1/geotiff/{z}/{x}/{y}.tif'/> 
+              <TileLayer url='https://tile.mapzen.com/mapzen/terrain/v1/geotiff/{z}/{x}/{y}.tif'/>
             </LayersControl.BaseLayer>
             <LayersControl.BaseLayer name="Topography">
               <WMSTileLayer layers="TOPO-WMS" url="http://ows.mundialis.de/services/service?"/>
