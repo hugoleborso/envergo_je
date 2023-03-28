@@ -1,9 +1,9 @@
-from pydantic import BaseModel
 from pyproj import Proj, transform
-from math import pi
+from haversine import inverse_haversine,haversine,Direction,Unit
+
 
 class GPS() :
-    r_earth = 6356752.3
+    r_earth = 6372800
     
     def __init__(self, lat : float, long : float):
         self.lat  = float(lat)
@@ -12,13 +12,19 @@ class GPS() :
     def __repr__(self) -> str:
         return "GPS : ("+str(self.lat)+","+str(self.long)+")"
     
-    def move(self,distanceLat:int,distanceLong:int):
-        angleLat = distanceLat/ self.r_earth * (180 / pi)
-        angleLong = distanceLong/ self.r_earth * (180 / pi)
-        return GPS(self.lat+angleLat,self.long+angleLong)
+    def toTuple(self):
+        return (self.lat,self.long)
+    
+    def move(self,distanceNorth:int,distanceWest:int):
+        newPt = inverse_haversine(inverse_haversine(self.toTuple(),distanceNorth,direction=Direction.NORTH,unit=Unit.METERS),distanceWest,Direction.WEST,unit=Unit.METERS)
+        return GPS(newPt[0],newPt[1])
     
     def toJSON(self):
         return {"lat":self.lat,"long":self.long}
+
+    def distanceToPoint(self,point):
+        return haversine(self.toTuple(),point.toTuple(),unit=Unit.METERS)
+        
         
 class Lambert():
     
@@ -57,6 +63,22 @@ class Point() :
         pts=[]
         for x in range(0,sidePointsNb):
             for y in range(0,sidePointsNb):
-                pts.append(self.gps.move(separationDistance*(x-sidePointsNb/2),separationDistance*(y-sidePointsNb/2)))
+                dx,dy=separationDistance*(x-sidePointsNb/2+0.5),separationDistance*(y-sidePointsNb/2+0.5)
+                pts.append(self.gps.move(dx,dy))
+        return pts
+    
+    def createRoundGridAround(self, radius : int):
+        pts=[]
+        for new_pt in self.createSquareGridAround(separationDistance = 2*radius/12,sidePointsNb = 12):
+            if self.gps.distanceToPoint(new_pt)<=radius:
+                pts.append(new_pt)
+        return pts
+    
+    def createDonutGridAround(self, innerRadius : int, outerRadius:int):
+        pts=[]
+        for new_pt in self.createSquareGridAround(separationDistance = 2*outerRadius/12,sidePointsNb = 12):
+            d = self.gps.distanceToPoint(new_pt)
+            if d<=outerRadius and d>innerRadius:
+                pts.append(new_pt)
         return pts
     

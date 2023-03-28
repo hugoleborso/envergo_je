@@ -94,6 +94,10 @@ class CustomMap extends Component {
   }
 
   render() {
+    let redirectUrl = "https://fr-fr.topographic-map.com/map-r1xtp/France/";
+    if (this.state.currentPos!==null){
+      redirectUrl = "https://fr-fr.topographic-map.com/map-r1xtp/France/?center="+this.state.currentPos.lat+"%2C"+this.state.currentPos.lng+"&zoom=13&popup="+this.state.currentPos.lat+"%2C"+this.state.currentPos.lng;
+    }
     return (
       <>
       <h1>EnvErgo Front Test</h1>
@@ -105,6 +109,7 @@ class CustomMap extends Component {
               <option value="IGN">IGN</option>
               <option value="elevation">Elevation API</option>
           </select>
+          <a style={{float: 'right'}} href={redirectUrl} target="_blank" rel="noreferrer">Ouvrir dans la carto alti</a>
         </div>
         <Map center={this.props.center} zoom={this.props.zoom} onClick={this.handleClick}>
           <LayersControl collapsed={false}>
