@@ -1,4 +1,4 @@
-from pyproj import Proj, transform
+# from pyproj import Proj, transform
 from haversine import inverse_haversine,haversine,Direction,Unit
 
 
@@ -39,8 +39,8 @@ class Lambert():
         return {"x":self.x,"y":self.y}
 
 class Point() : 
-    lambertProj = Proj('epsg:2154')
-    gpsProj = Proj('epsg:4326')
+    # lambertProj = Proj('epsg:2154')
+    # gpsProj = Proj('epsg:4326')
     
     def __init__(self,lat=None, long=None, x=None, y=None) -> None:
         if lat is not None and long is not None:
@@ -49,15 +49,15 @@ class Point() :
         if x is not None and y is not None:
             self.lambert = Lambert(x,y)
         
-    def GPSToLambert(self):
-        (x,y) = transform(self.gpsProj,self.lambertProj,self.gps.lat,self.gps.long)
-        self.lambert = Lambert(x=x,y=y)
-        return self.lambert
+    # def GPSToLambert(self):
+    #     (x,y) = transform(self.gpsProj,self.lambertProj,self.gps.lat,self.gps.long)
+    #     self.lambert = Lambert(x=x,y=y)
+    #     return self.lambert
     
-    def LambertToGPS(self):
-        (lat,long) = transform(self.lambertProj,self.gpsProj,self.lambert.x,self.lambert.y)
-        self.gps=GPS(lat=lat,long=long)
-        return self.GPS
+    # def LambertToGPS(self):
+    #     (lat,long) = transform(self.lambertProj,self.gpsProj,self.lambert.x,self.lambert.y)
+    #     self.gps=GPS(lat=lat,long=long)
+    #     return self.GPS
     
     def createSquareGridAround(self,sidePointsNb : int, separationDistance : int):
         pts=[]
