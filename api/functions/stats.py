@@ -1,8 +1,7 @@
-from scipy import stats
-
 def getStats(point,surroundingPoints):
-    st = stats.describe([pt['z'] for pt in surroundingPoints])
-    return {'mean':st.mean,'max':st.minmax[1],'min':st.minmax[0],'var':st.variance}
+    alts = [pt['z'] for pt in surroundingPoints]
+    min 
+    return {'mean':sum(alts)/len(alts),'max':max(alts),'min':min(alts)}
 
 def tripleCircleBassinVersant(point,pointAlti,circle1,circle2,circle3):
     surfaceCount=0
