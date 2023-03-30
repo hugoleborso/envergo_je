@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 
 
+
 from classes.responses import SurroundingsResponse
 from classes.responses import SurroundingsSquareResponse
 from classes.responses import SurroundingsCircleResponse
@@ -17,6 +18,7 @@ from classes.coordinates import Point
 from classes.altiQuery import altiQuery
 
 from functions.stats import getStats
+from functions.stats import tripleCircleBassinVersant
 
 
 
@@ -58,15 +60,17 @@ async def store_search(lat: float, long: float, api:str="IGN"):
     return res
 
 @app.get("/surroundings", status_code=200)
-async def store_search(lat: str, long: str):
+async def surroundings(lat: str, long: str):
     point = Point(lat,long)
     pts = point.createDonutGridAround(100,300)
+    print(len(pts))
     altiQueryService = altiQuery("IGN")
     res = altiQueryService.QueryMultiplePoints(pts)
+    stats = getStats(point,res)
     return SurroundingsResponse(success=True,points=res,dataset=altiQueryService.dataSet)
 
 @app.get("/surroundings/square", status_code=200)
-async def store_search(lat: str, long: str,sidePointsNb:int=10,separationDistance:int=10):
+async def surroundings_square(lat: str, long: str,sidePointsNb:int=10,separationDistance:int=10):
     point = Point(lat,long)
     pts = point.createSquareGridAround(sidePointsNb,separationDistance)
     altiQueryService = altiQuery("IGN")
@@ -80,7 +84,7 @@ async def store_search(lat: str, long: str,sidePointsNb:int=10,separationDistanc
         stats=stats)
 
 @app.get("/surroundings/circle", status_code=200)
-async def store_search(lat: str, long: str,radius:int=100):
+async def surroundings_circle(lat: str, long: str,radius:int=100):
     point = Point(lat,long)
     pts = point.createRoundGridAround(radius)
     altiQueryService = altiQuery("IGN")
@@ -94,7 +98,7 @@ async def store_search(lat: str, long: str,radius:int=100):
         stats=stats)
 
 @app.get("/surroundings/triple-circle", status_code=200)
-async def store_search(lat: str, long: str,radius:int=100):
+async def surroundings_triple_circle(lat: str, long: str,radius:int=100):
     point = Point(lat,long)
     pts1 = point.createRoundGridAround(radius)
     pts3 = point.createDonutGridAround(radius,3*radius)
@@ -104,15 +108,19 @@ async def store_search(lat: str, long: str,radius:int=100):
     res3 = altiQueryService.QueryMultiplePoints(pts3)
     res5 = altiQueryService.QueryMultiplePoints(pts5)
     stats = getStats(point,res1+res3+res5)
+    altiResponse = altiQueryService.QueryOnePoint(point.gps.lat,point.gps.long)
+    indicator = tripleCircleBassinVersant(point.gps,altiResponse.alti,res1,res3,res5)
     return SurroundingsTripleCircleResponse(
         success=True,
         center=point.gps.toJSON(),
         radii=[radius,3*radius,5*radius],
         dataset=altiQueryService.dataSet,
+        result=indicator,
         stats=stats)
 
 
 if __name__ == "__main__":
+    print('Starting')
     uvicorn.run(
         "main:app",
         port=80,

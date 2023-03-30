@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import {Map, TileLayer, Popup, Marker, LayersControl, WMSTileLayer} from "react-leaflet";
+import {Map, TileLayer, ScaleControl, Marker, LayersControl, Circle,Polygon} from "react-leaflet";
 
 
 class CustomMap extends Component {
@@ -15,8 +15,13 @@ class CustomMap extends Component {
       currentAlt:null,
       t_a:"",
       t_p:"No selected position yet.",
+      t_s:"No surroundings checked yet",
       surroundings:[],
-      t_s:"No surroundings checked yet"
+      tripleCircleRadii:null,
+      SquarePoints:null,
+      circleRadius:null,
+      stats:null,
+      indicator:null
     };
 
     this.handleClick = this.handleClick.bind(this);
@@ -26,7 +31,7 @@ class CustomMap extends Component {
     this.setState({ currentPos: e.latlng });
     this.fillInfoParag();
     this.askAlti();
-    this.askSurroundings()
+    this.askSurroundingsTripleCircle()
   }
 
   handleAltiResponse(response){
@@ -51,8 +56,28 @@ class CustomMap extends Component {
       console.log(response,response.status);
     }
     else if (response.success != false){
-      console.log(response.points)
+      console.log(response)
       this.setState({ surroundings: response.points});
+      this.fillSurroundingsParag();
+    }
+    else {
+      console.log('r',response.success, true)
+      alert('Error in the surroundings query by success variable : see console')
+      console.log(response);
+    }
+  }
+
+  handleSurroundingsTripleCircleResponse(response){
+    if (response.status === 422){
+      alert('Error in the surroundings query by status: see console')
+      console.log(response,response.status);
+    }
+    else if (response.success != false){
+      console.log(response)
+      this.setState({ surroundings: []});
+      this.setState({ tripleCircleRadii: response.radii});
+      this.setState({ stats: response.stats});
+      this.setState({ indicator: response.result});
       this.fillSurroundingsParag();
     }
     else {
@@ -76,6 +101,13 @@ class CustomMap extends Component {
     .then((response) => {this.handleSurroundingsResponse(response)});
   }
 
+  askSurroundingsTripleCircle(){
+    let query = this.state.fetchURL+"/surroundings/triple-circle?lat="+this.state.currentPos.lat+"&long="+this.state.currentPos.lng
+    fetch(query)
+    .then((response) => response.json())
+    .then((response) => {this.handleSurroundingsTripleCircleResponse(response)});
+  }
+
   fillInfoParag(){
     if (this.state.currentPos===null){this.setState({t_p:"No selected position yet."})}
     else {this.setState({t_p: "You selected a position with lat = "+this.state.currentPos.lat+" and long = "+this.state.currentPos.lng+"."})}
@@ -85,18 +117,29 @@ class CustomMap extends Component {
   }
 
   fillSurroundingsParag(){
-    if (this.state.surroundings ===null){this.setState({t_s:"No surroundings checked yet"})}
-    else {
-      let maxAlti = Math.max(...this.state.surroundings.map(o => o.z))
-      let minAlti = Math.min(...this.state.surroundings.map(o => o.z))
-      this.setState({t_s:"This zone has an max elevation of "+maxAlti+" and a min elevation of "+minAlti+"."})
+    if (this.state.stats===null){
+      if (this.state.surroundings ===null){this.setState({t_s:"No surroundings checked yet"})}
+      else {
+        let maxAlti = Math.max(...this.state.surroundings.map(o => o.z))
+        let minAlti = Math.min(...this.state.surroundings.map(o => o.z))
+        this.setState({t_s:"This zone has an max elevation of "+maxAlti+" and a min elevation of "+minAlti+"."})
+      }
     }
+    else {
+      this.setState({t_s:"This zone has an max elevation of "+this.state.stats.max+" and a min elevation of "+this.state.stats.min+". "+
+                          "The alti average is "+this.state.stats.mean+". "})
+    }
+    if (this.state.indicator !==null){
+      this.setState({t_s:this.state.t_s+" The indicator is: "+this.state.indicator})
+    }
+    
   }
+  
 
   render() {
     let redirectUrl = "https://fr-fr.topographic-map.com/map-r1xtp/France/";
     if (this.state.currentPos!==null){
-      redirectUrl = "https://fr-fr.topographic-map.com/map-r1xtp/France/?center="+this.state.currentPos.lat+"%2C"+this.state.currentPos.lng+"&zoom=13&popup="+this.state.currentPos.lat+"%2C"+this.state.currentPos.lng;
+      redirectUrl = "https://fr-fr.topographic-map.com/map-r1xtp/France/?center="+this.state.currentPos.lat+"%2C"+this.state.currentPos.lng+"&zoom=15&popup="+this.state.currentPos.lat+"%2C"+this.state.currentPos.lng;
     }
     return (
       <>
@@ -112,24 +155,31 @@ class CustomMap extends Component {
           <a style={{float: 'right'}} href={redirectUrl} target="_blank" rel="noreferrer">Ouvrir dans la carto alti</a>
         </div>
         <Map center={this.props.center} zoom={this.props.zoom} onClick={this.handleClick}>
+          
+          
+          <ScaleControl position="bottomleft" />
           <LayersControl collapsed={false}>
             <LayersControl.BaseLayer name="Street View" checked>
               <TileLayer url='https://{s}.tile.osm.org/{z}/{x}/{y}.png'/>
             </LayersControl.BaseLayer>
-            <LayersControl.BaseLayer name="Topography 1" >
+            <LayersControl.BaseLayer name="Topo IGN" >
               <TileLayer url='https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png'/>
             </LayersControl.BaseLayer>
-            <LayersControl.BaseLayer name="Topography 2" >
+            <LayersControl.BaseLayer name="Topo 2" >
               <TileLayer url='http://{s}.tile3.opencyclemap.org/landscape/{z}/{x}/{y}.png'/>
-            </LayersControl.BaseLayer>
-            <LayersControl.BaseLayer name="Topography 3" >
-              <TileLayer url='https://tile.mapzen.com/mapzen/terrain/v1/geotiff/{z}/{x}/{y}.tif'/>
-            </LayersControl.BaseLayer>
-            <LayersControl.BaseLayer name="Topography">
-              <WMSTileLayer layers="TOPO-WMS" url="http://ows.mundialis.de/services/service?"/>
             </LayersControl.BaseLayer>
           </LayersControl>
           {this.state.currentPos && <Marker position={this.state.currentPos}></Marker>}
+          {this.state.tripleCircleRadii && 
+          <>
+            <Circle center={[this.state.currentPos.lat,this.state.currentPos.lng]} radius={this.state.tripleCircleRadii[0]}/>
+            <Circle center={[this.state.currentPos.lat,this.state.currentPos.lng]} radius={this.state.tripleCircleRadii[1]}/>
+            <Circle center={[this.state.currentPos.lat,this.state.currentPos.lng]} radius={this.state.tripleCircleRadii[2]}/>
+          </>
+          }
+          {this.state.SquarePoints && 
+            <Polygon pathOptions={purpleOptions} positions={this.state.SquarePoints} />
+          }
           {this.state.surroundings.map((pt)=> (
             <Marker
             key={pt.lon+""+pt.lat}
