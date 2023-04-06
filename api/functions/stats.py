@@ -1,3 +1,5 @@
+from math import pi
+
 def getStats(point,surroundingPoints):
     alts = [pt['z'] for pt in surroundingPoints]
     min 
@@ -8,22 +10,36 @@ def tripleCircleBassinVersant(point,pointAlti,circles,radii,eightQuadrants):
     surfaceCount=0
     
     for quadrant in quadrantsGenerator(point,circles,eightQuadrants=eightQuadrants):
-        surfaceCount += nextCircleCheck(pointAlti,quadrant)
+        surfaceCount += nextQuadrantCheck(pointAlti,quadrant,radii)
     
-    return surfaceCount/100 
+    return surfaceCount/8 if eightQuadrants else surfaceCount/4
 
 
-def nextCircleCheck(alti,quadrant,index=0,score=0,addedScore={0:1,1:8,2:16},elevationPercentage={0:1.02,1:1.05,2:1.05}):
+def nextQuadrantCheck(alti,quadrant,radii,index=0,surface=0):
         
     if index==len(quadrant):
-        return score
+        return surface
     
     meanAlti = sum([pt['z'] for pt in quadrant[index]])/len(quadrant[index])
-    if meanAlti>elevationPercentage[index]*alti:
-        score+=addedScore[index]
-        return nextCircleCheck(meanAlti,quadrant,index=index+1,score=score)
-    return score
+    if checkElevationDiff(meanAlti,alti,index,radii):
+        surface+=getSurface(index,radii)
+        return nextQuadrantCheck(meanAlti,quadrant,radii,index=index+1,surface=surface)
+    return surface
+
+
+def checkElevationDiff(meanAlti,altiToCheck,index,radii):
+    if index == 0:
+        return (meanAlti-altiToCheck)/(radii[0]/2)>0.05
+    else :
+        return (meanAlti-altiToCheck)/((radii[index]-radii[index-1])/2)>0.05
     
+    
+def getSurface(index,radii):
+    if index == 0:
+        return pi*radii[index]**2
+    else:
+        return pi*radii[index]**2-pi*radii[index-1]**2
+
 
 def quadrantsGenerator(centerPoint,circles,eightQuadrants=False):
     quadrants=[]
