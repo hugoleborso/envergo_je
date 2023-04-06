@@ -98,7 +98,7 @@ async def surroundings_circle(lat: str, long: str,radius:int=100):# -> Surroundi
         stats=stats)
 
 @app.get("/surroundings/triple-circle", status_code=200)
-async def surroundings_triple_circle(lat: str, long: str,radii=[25,75,125],eightQuadrants:bool=False):# -> SurroundingsTripleCircleResponse:
+async def surroundings_triple_circle(lat: str, long: str,radii=[25,50,100],eightQuadrants:bool=True):# -> SurroundingsTripleCircleResponse:
     point = Point(lat,long)
     altiQueryService = altiQuery("IGN")
     pointsList = [point.createRoundGridAround(radii[0])]+[point.createDonutGridAround(radii[i],radii[i+1]) for i in range(len(radii)-1)]

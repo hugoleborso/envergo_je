@@ -68,10 +68,10 @@ def isQuadrant(quadrant,centerPoint,pt):
 
 def hasMovedMoreLong(centerPoint,pt,includeEqual=False):
     if includeEqual:
-        return abs(centerPoint.long-pt['long'])>=abs(centerPoint.lat-pt['lat'])
-    return abs(centerPoint.long-pt['long'])>abs(centerPoint.lat-pt['lat'])
+        return abs(centerPoint.long-pt['lon'])>=abs(centerPoint.lat-pt['lat'])
+    return abs(centerPoint.long-pt['lon'])>abs(centerPoint.lat-pt['lat'])
 
 def hasMovedMoreLat(centerPoint,pt,includeEqual=False): # on crée la fonction antagoniste par lisibilité du code
     if includeEqual:
-        return abs(centerPoint.lat-pt['lat'])>=abs(centerPoint.long-pt['long'])
-    return abs(centerPoint.lat-pt['lat'])>abs(centerPoint.long-pt['long'])
+        return abs(centerPoint.lat-pt['lat'])>=abs(centerPoint.long-pt['lon'])
+    return abs(centerPoint.lat-pt['lat'])>abs(centerPoint.long-pt['lon'])
