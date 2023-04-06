@@ -4,10 +4,10 @@ def getStats(point,surroundingPoints):
     return {'mean':sum(alts)/len(alts),'max':max(alts),'min':min(alts)}
 
 
-def tripleCircleBassinVersant(point,pointAlti,circles):
+def tripleCircleBassinVersant(point,pointAlti,circles,radii,eightQuadrants):
     surfaceCount=0
     
-    for quadrant in quadrantsGenerator(point,circles,eightQuadrants=False):
+    for quadrant in quadrantsGenerator(point,circles,eightQuadrants=eightQuadrants):
         surfaceCount += nextCircleCheck(pointAlti,quadrant)
     
     return surfaceCount/100 

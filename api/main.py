@@ -98,22 +98,19 @@ async def surroundings_circle(lat: str, long: str,radius:int=100):# -> Surroundi
         stats=stats)
 
 @app.get("/surroundings/triple-circle", status_code=200)
-async def surroundings_triple_circle(lat: str, long: str,radius:int=100):# -> SurroundingsTripleCircleResponse:
+async def surroundings_triple_circle(lat: str, long: str,radii=[100,300,500],eightQuadrants:bool=False):# -> SurroundingsTripleCircleResponse:
     point = Point(lat,long)
-    pts1 = point.createRoundGridAround(radius)
-    pts3 = point.createDonutGridAround(radius,3*radius)
-    pts5 = point.createDonutGridAround(3*radius,5*radius)
     altiQueryService = altiQuery("IGN")
-    res1 = altiQueryService.QueryMultiplePoints(pts1)
-    res3 = altiQueryService.QueryMultiplePoints(pts3)
-    res5 = altiQueryService.QueryMultiplePoints(pts5)
-    stats = getStats(point,res1+res3+res5)
+    pointsList = [point.createRoundGridAround(radii[0])]+[point.createDonutGridAround(radii[i],radii[i+1]) for i in range(len(radii)-1)]
+    circles = [altiQueryService.QueryMultiplePoints(pts) for pts in pointsList]
+    stats = getStats(point,[pt for pts in circles for pt in pts])
     altiResponse = altiQueryService.QueryOnePoint(point.gps.lat,point.gps.long)
-    indicator = tripleCircleBassinVersant(point.gps,altiResponse.alti,[res1,res3,res5])
+    indicator = tripleCircleBassinVersant(point.gps,altiResponse.alti,circles,radii,eightQuadrants)
+    
     return SurroundingsTripleCircleResponse(
         success=True,
         center=point.gps.toJSON(),
-        radii=[radius,3*radius,5*radius],
+        radii=radii,
         dataset=altiQueryService.dataSet,
         result=indicator,
         stats=stats)
