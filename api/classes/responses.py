@@ -17,42 +17,14 @@ class ignPoint():
     z: float
     acc: float
     
-    
-class SurroundingsResponse():
-    def __init__(self,success,points,dataset,error=None):
-        self.success=success
-        self.error=error
-        self.points=points
-        self.dataset=dataset
         
-        
-class SurroundingsCircleResponse():
-    def __init__(self,success,radius,center,dataset,stats,result,error=None):
-        self.success=success
-        self.error=error
-        self.center=center
-        self.radius=radius
-        self.dataset=dataset
-        self.stats=stats
-        self.result=result
-        
-class SurroundingsTripleCircleResponse():
-    def __init__(self,success,center,radii,dataset,stats,result,error=None):
+class SurroundingsMultiCircleResponse():
+    def __init__(self,success,center,radii,slope,dataset,stats,result,error=None):
         self.success=success
         self.error=error
         self.center=center
         self.radii=radii
+        self.slope=slope,
         self.dataset=dataset
         self.stats=stats
         self.result=result
-
-class SurroundingsSquareResponse():
-    def __init__(self,success,center,side,dataset,stats,result,error=None):
-        self.success=success
-        self.center=center
-        self.error=error
-        self.side=side
-        self.dataset=dataset
-        self.stats=stats
-        self.result=result
-    

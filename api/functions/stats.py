@@ -6,32 +6,33 @@ def getStats(point,surroundingPoints):
     return {'mean':sum(alts)/len(alts),'max':max(alts),'min':min(alts)}
 
 
-def tripleCircleBassinVersant(point,pointAlti,circles,radii,eightQuadrants):
+def multiCircleBassinVersant(point,innerCircleAlti,circles,radii,eightQuadrants,slope):
     surfaceCount=0
+    innerCircleMeanAlti = sum([pt['z'] for pt in innerCircleAlti])/len(innerCircleAlti)
     
     for quadrant in quadrantsGenerator(point,circles,eightQuadrants=eightQuadrants):
-        surfaceCount += nextQuadrantCheck(pointAlti,quadrant,radii)
+        surfaceCount += nextQuadrantCheck(innerCircleMeanAlti,quadrant,radii,slope=slope)
     
     return surfaceCount/8 if eightQuadrants else surfaceCount/4
 
 
-def nextQuadrantCheck(alti,quadrant,radii,index=0,surface=0):
+def nextQuadrantCheck(alti,quadrant,radii,index=0,surface=0,slope=0.05):
         
     if index==len(quadrant):
         return surface
     
     meanAlti = sum([pt['z'] for pt in quadrant[index]])/len(quadrant[index])
-    if checkElevationDiff(meanAlti,alti,index,radii):
+    if checkElevationDiff(meanAlti,alti,index,radii,slope):
         surface+=getSurface(index,radii)
-        return nextQuadrantCheck(meanAlti,quadrant,radii,index=index+1,surface=surface)
+        return nextQuadrantCheck(meanAlti,quadrant,radii,index=index+1,surface=surface,slope=slope)
     return surface
 
 
-def checkElevationDiff(meanAlti,altiToCheck,index,radii):
+def checkElevationDiff(meanAlti,altiToCheck,index,radii,slope):
     if index == 0:
-        return (meanAlti-altiToCheck)/(radii[0]/2)>0.05
+        return (meanAlti-altiToCheck)/(radii[0]/2)>slope
     else :
-        return (meanAlti-altiToCheck)/((radii[index]-radii[index-1])/2)>0.05
+        return (meanAlti-altiToCheck)/((radii[index]-radii[index-1])/2)>slope
     
     
 def getSurface(index,radii):
