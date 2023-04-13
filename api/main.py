@@ -61,7 +61,6 @@ async def surroundings(lat: float, long: float,slope:float=0.05,innerCircleRadiu
     point = Point(lat,long)
     altiQueryService = altiQuery("IGN")
     radii = [int(radius) for radius in strRadii[1:-1].split(',')]
-    print(radii,slope)
     innerCircleAlti = altiQueryService.QueryMultiplePoints(point.createRoundGridAround(innerCircleRadius))
     pointsList = [point.createDonutGridAround(innerCircleRadius,radii[0])]+[point.createDonutGridAround(radii[i],radii[i+1]) for i in range(len(radii)-1)]
     circles = [altiQueryService.QueryMultiplePoints(pts) for pts in pointsList]

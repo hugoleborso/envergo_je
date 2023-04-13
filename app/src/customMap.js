@@ -149,17 +149,17 @@ class CustomMap extends Component {
             </LayersControl.BaseLayer>
           </LayersControl>
 
-          {this.state.currentPos && <Marker position={this.state.currentPos}></Marker>}
-
-          {this.state.estimatedSurface !== null && 
-           <Circle center={[this.state.currentPos.lat,this.state.currentPos.lng]} 
-                    radius={this.state.innerCircleRadii} 
-                    pathOptions={{color:"#CC1034",fillColor: "#CC1034" }}/>
-          }
+          {this.state.currentPos && <Marker position={this.state.currentPos} color={"#FF3333"} fillColor={"#FF3333" }></Marker>}
 
           {this.state.estimatedSurface !== null && this.state.multiCircleRadii && this.state.multiCircleRadii.map((radius)=> (
             <Circle center={[this.state.currentPos.lat,this.state.currentPos.lng]} key={radius} radius={radius}/>
           ))}
+
+          {this.state.estimatedSurface !== null && 
+           <Circle center={[this.state.currentPos.lat,this.state.currentPos.lng]} 
+                    radius={this.state.innerCircleRadii} 
+                    color={"#FF3333"} fillColor={"#FF3333" }/>
+          }
 
         </Map>
 
