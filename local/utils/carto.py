@@ -63,7 +63,7 @@ def createQuadrants(x, y, cartoPrecision, innerRadius, radii, quadrantsNb,debugP
 
 class cartoQuerier:
     def __init__(self,carto_dir) -> None:
-        self.loadedCartos = {}
+        self.loadedCartos = []
         self.availableCartos=[]
         for file in os.listdir(carto_dir):
             self.availableCartos.append(getCartoInfo(carto_dir+'/'+file))
@@ -71,24 +71,36 @@ class cartoQuerier:
     def loadNeededCartos(self,allPoints):
         maxX,minX= max(allPoints, key=lambda x: x[0])[0],min(allPoints, key=lambda x: x[0])[0]
         maxY,minY= max(allPoints, key=lambda x: x[1])[1],min(allPoints, key=lambda x: x[1])[1]
-        print(maxX,minX,maxY,minY)
+        # print(maxX,minX,maxY,minY)
         for c in self.availableCartos:
+            # if one of the summits of the bounding square is in the carto, load it (might not be usefull, but not really slowing down, the point is to not laod all cartos at once)
             if isInCarto(maxX,maxY,c['x_range'],c['y_range']) or isInCarto(minX,maxY,c['x_range'],c['y_range']) or isInCarto(maxX,minY,c['x_range'],c['y_range']) or isInCarto(minX,minY,c['x_range'],c['y_range']):
-                self.loadedCartos[c['fileName']]=(c,loadCarto(c['fileName']))
-    
+                if not any(item[0] == c['fileName'] for item in self.loadedCartos ):
+                    self.loadedCartos.append((c['fileName'],c,loadCarto(c['fileName'])))
+                    print(c)
+            else : 
+                if any(item[0] == c['fileName'] for item in self.loadedCartos ):
+                    removeIndex = [c[0] for c in self.loadedCartos].index(c['fileName'])
+                    del self.loadedCartos[removeIndex]
+                    
     def queryAlti(self,points):
         altis = []
         for point in points:
-            for (info,data) in self.loadedCartos.values():
+            for (_,info,data) in self.loadedCartos:
                 if isInCarto(point[0],point[1],info['x_range'],info['y_range']):
-                    new_x=round((point[0]-info['xllcorner'])/info["cellsize"])
-                    new_y=round((point[1]-info['yllcorner'])/info["cellsize"])
-                    alti = data[new_x,new_y]
+                    new_point=fitToCarto(point,info)
+                    alti = data[new_point[1],new_point[0]]
+                    # print(new_point,alti)
                     if alti == info['NODATA_value']:
-                        alti=0
+                        alti=None
                     altis.append(alti)
         return altis
-                    
+
+def fitToCarto(point,info):
+    new_x=round((point[0]-info["x_range"][0])/info["cellsize"])
+    new_y=round(info["nrows"]-(point[1]-info["y_range"][0])/info["cellsize"])
+    
+    return (new_x,new_y)
 
 def isInCarto(x,y,x_range,y_range):
     return x>=x_range[0] and x<=x_range[1] and y>=y_range[0] and y<=y_range[1]
