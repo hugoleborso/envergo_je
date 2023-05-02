@@ -71,13 +71,12 @@ class cartoQuerier:
     def loadNeededCartos(self,allPoints):
         maxX,minX= max(allPoints, key=lambda x: x[0])[0],min(allPoints, key=lambda x: x[0])[0]
         maxY,minY= max(allPoints, key=lambda x: x[1])[1],min(allPoints, key=lambda x: x[1])[1]
-        # print(maxX,minX,maxY,minY)
+        
         for c in self.availableCartos:
             # if one of the summits of the bounding square is in the carto, load it (might not be usefull, but not really slowing down, the point is to not laod all cartos at once)
             if isInCarto(maxX,maxY,c['x_range'],c['y_range']) or isInCarto(minX,maxY,c['x_range'],c['y_range']) or isInCarto(maxX,minY,c['x_range'],c['y_range']) or isInCarto(minX,minY,c['x_range'],c['y_range']):
                 if not any(item[0] == c['fileName'] for item in self.loadedCartos ):
                     self.loadedCartos.append((c['fileName'],c,loadCarto(c['fileName'])))
-                    print(c)
             else : 
                 if any(item[0] == c['fileName'] for item in self.loadedCartos ):
                     removeIndex = [c[0] for c in self.loadedCartos].index(c['fileName'])
@@ -90,7 +89,7 @@ class cartoQuerier:
                 if isInCarto(point[0],point[1],info['x_range'],info['y_range']):
                     new_point=fitToCarto(point,info)
                     alti = data[new_point[1],new_point[0]]
-                    # print(new_point,alti)
+                    
                     if alti == info['NODATA_value']:
                         alti=None
                     altis.append(alti)
