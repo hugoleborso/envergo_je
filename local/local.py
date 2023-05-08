@@ -22,17 +22,17 @@ def main(points,cartoPrecision, innerRadius, radii, quadrantsNb,slope):
     return results
 
 
-def cartoCreator(bottomLeft,OutputcartoPrecision,inputCartoPrecision,width,height,ouptutFile):
+def cartoCreator(bottomLeft, outputCartoPrecision, inputCartoPrecision, width, height, ouptutFile, innerRadius, radii, quadrantsNb, slope):
     points = []
     for y in range(height-1,-1,-1):
         for x in range(width):
-            points.append((round(bottomLeft[0]+x*OutputcartoPrecision),round(bottomLeft[1]+y*OutputcartoPrecision)))
+            points.append((round(bottomLeft[0]+x*outputCartoPrecision),round(bottomLeft[1]+y*outputCartoPrecision)))
     
     print("====== starting carto creation ======\n")
     
-    res = main(points,inputCartoPrecision,25,[50,75,100,130,160],8,0.05)
+    res = main(points, inputCartoPrecision, innerRadius, radii, quadrantsNb, slope)
     
-    saveListToCarto(res,ouptutFile,{"ncols": width,"nrows": height,"xllcorner": bottomLeft[0]-OutputcartoPrecision/2, "yllcorner" : bottomLeft[1]+OutputcartoPrecision/2,"cellsize"  :OutputcartoPrecision,"NODATA_value":  -99999.00})
+    saveListToCarto(res,ouptutFile,{"ncols": width,"nrows": height,"xllcorner": bottomLeft[0]-outputCartoPrecision/2, "yllcorner" : bottomLeft[1]+outputCartoPrecision/2,"cellsize"  :outputCartoPrecision,"NODATA_value":  -99999.00})
     
 
             

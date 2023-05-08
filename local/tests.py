@@ -5,7 +5,7 @@ import numpy as np
 
 
 from local import main,cartoCreator
-from utils.carto import createQuadrants,loadCarto,getCartoInfo,fitToCarto,saveListToCarto
+from utils.carto import createQuadrants,loadCarto,getCartoInfo,fitToCarto
 
 
 def testPlot():
@@ -16,7 +16,7 @@ def testPlot():
         print(i,quads[i])
     plotQuadrants(innerAtli,quads,radii,qNb)
 
-def plotQuadrants(innerAtli,quads,radii,qNb):
+def plotQuadrants(innerAtli, quads, radii, qNb):
     colors=['blue','purple','red','pink','orange','yellow','lime','green']
     fig, ax = plt.subplots()
     ax.set_xlim([0, 1000])
@@ -63,7 +63,7 @@ def testCarto(point):
     plt.colorbar(orientation='vertical')
     plt.show()
 
-def plotAltiCarto(altiCartoFile,title,alpha=1,stretch=1,givenAx=None,colormap=None,vmin=None,vmax=None):
+def plotAltiCarto(altiCartoFile, title, alpha=1, stretch=1, givenAx=None, colormap=None):
     
     if givenAx is None:
         fig = plt.figure()
@@ -105,11 +105,11 @@ def stressTest():
     total = t1-t0
     print('total time : ',total)
 
-def testCartoCreator(bottomLeft,OutputcartoPrecision,inputCartoPrecision,width,height,ouptutFile,ouptutScreenShot):
-    cartoCreator(bottomLeft,OutputcartoPrecision,inputCartoPrecision,width,height,ouptutFile)
-    bassinVersantPlot('local/alti_data/RGEALTI_FXX_0330_6705_MNT_LAMB93_IGN69.asc',ouptutFile,ouptutScreenShot)
+def testCartoCreator(bottomLeft, outputCartoPrecision, inputCartoPrecision, width, height, ouptutFile, ouptutScreenShot, innerRadius, radii, quadrantsNb, slope):
+    cartoCreator(bottomLeft, outputCartoPrecision, inputCartoPrecision, width, height, ouptutFile, innerRadius, radii, quadrantsNb, slope)
+    bassinVersantPlot('local/alti_data/RGEALTI_FXX_0330_6705_MNT_LAMB93_IGN69.asc', ouptutFile, ouptutScreenShot)
 
-def bassinVersantPlot(altiFile,bassinVersantFile,savePng):
+def bassinVersantPlot(altiFile, bassinVersantFile, savePng):
     title = 'Bassin versant \n1 unité = 5m'
     ax = plotAltiCarto(altiFile,title,colormap='alti')
     ax = plotAltiCarto(bassinVersantFile,title,alpha=0.5,stretch=4,colormap='bassinVersant',givenAx=ax)
@@ -120,7 +120,20 @@ def bassinVersantPlot(altiFile,bassinVersantFile,savePng):
 # stressTest()
 # testCarto((334155,6701650))
 # print(main([(334155,6701650)],5,25,[50,75,100,130,160],8,0.05))
-testCartoCreator((330000,6700000),20,20,250,250,'local/output/test.asc','local/output/test.png')
+
+testCartoCreator(
+    bottomLeft = (330000,6700000),
+    outputCartoPrecision = 20,
+    inputCartoPrecision = 20,
+    width = 250,
+    height = 250,
+    ouptutFile = 'local/output/test.asc',
+    ouptutScreenShot = 'local/output/test.png',
+    innerRadius = 25,
+    radii = [50,75,100,130,160],
+    quadrantsNb = 8,
+    slope = 0.05
+    )
 
 # bassinVersantPlot()
 

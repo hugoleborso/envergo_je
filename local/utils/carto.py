@@ -21,7 +21,9 @@ def loadCarto(fileName):
     return np.loadtxt(fileName, skiprows=6)
 
 def saveListToCarto(list,fileName,info):
-    array = np.reshape(list, (info["ncols"],info["nrows"]))
+    saveArrayToCarto(np.reshape(list, (info["ncols"],info["nrows"])),fileName,info)
+
+def saveArrayToCarto(array,fileName,info):
     header = "ncols     %s\n" % info["ncols"]
     header += "nrows    %s\n" % info["nrows"]
     header += "xllcorner %s\n" % info["xllcorner"]
@@ -30,7 +32,6 @@ def saveListToCarto(list,fileName,info):
     header += "NODATA_value %s\n" % info["NODATA_value"]
     
     np.savetxt(fileName, array, header=header, fmt="%1.2f")
-    pass
 
 def createQuadrants(x, y, cartoPrecision, innerRadius, radii, quadrantsNb,debugPrints=False):
 
