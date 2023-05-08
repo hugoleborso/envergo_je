@@ -107,7 +107,8 @@ def stressTest():
 
 def testCartoCreator(bottomLeft, outputCartoPrecision, inputCartoPrecision, width, height, ouptutFile, ouptutScreenShot, innerRadius, radii, quadrantsNb, slope):
     cartoCreator(bottomLeft, outputCartoPrecision, inputCartoPrecision, width, height, ouptutFile, innerRadius, radii, quadrantsNb, slope)
-    bassinVersantPlot('local/alti_data/RGEALTI_FXX_0330_6705_MNT_LAMB93_IGN69.asc', ouptutFile, ouptutScreenShot)
+    carte = 'local/alti_data/RGEALTI_FXX_0'+str(bottomLeft[0]//1000)+'_'+str(bottomLeft[1]//1000+5)+'_MNT_LAMB93_IGN69.asc'
+    bassinVersantPlot(carte, ouptutFile, ouptutScreenShot)
 
 def bassinVersantPlot(altiFile, bassinVersantFile, savePng):
     title = 'Bassin versant \n1 unité = 5m'
@@ -122,7 +123,7 @@ def bassinVersantPlot(altiFile, bassinVersantFile, savePng):
 # print(main([(334155,6701650)],5,25,[50,75,100,130,160],8,0.05))
 
 testCartoCreator(
-    bottomLeft = (330000,6700000),
+    bottomLeft = (285000,6705000),
     outputCartoPrecision = 20,
     inputCartoPrecision = 20,
     width = 250,
