@@ -13,12 +13,24 @@ def getCartoInfo(fileName):
         info["yllcorner"]= float(f.readline().split(' ')[-1])
         info["cellsize"]= float(f.readline().split(' ')[-1])
         info["NODATA_value"]= float(f.readline().split(' ')[-1])
-        info['x_range']=(round(info["xllcorner"]+info["cellsize"]/2),round(info["xllcorner"]+info["ncols"]*info["cellsize"]+info["cellsize"]/2))
-        info['y_range']=(round(info["yllcorner"]-info["cellsize"]/2),round(info["yllcorner"]+info["nrows"]*info["cellsize"]-info["cellsize"]/2))
+        info['x_range']=(round(info["xllcorner"]+info["cellsize"]/2),round(info["xllcorner"]+info["ncols"]*info["cellsize"]-info["cellsize"]/2))
+        info['y_range']=(round(info["yllcorner"]-info["cellsize"]/2),round(info["yllcorner"]+info["nrows"]*info["cellsize"]-info["cellsize"]*3/2))
     return info
 
 def loadCarto(fileName):
     return np.loadtxt(fileName, skiprows=6)
+
+def saveListToCarto(list,fileName,info):
+    array = np.reshape(list, (info["ncols"],info["nrows"]))
+    header = "ncols     %s\n" % info["ncols"]
+    header += "nrows    %s\n" % info["nrows"]
+    header += "xllcorner %s\n" % info["xllcorner"]
+    header += "yllcorner %s\n" % info["yllcorner"]
+    header += "cellsize %s\n" % info["cellsize"]
+    header += "NODATA_value %s\n" % info["NODATA_value"]
+    
+    np.savetxt(fileName, array, header=header, fmt="%1.2f")
+    pass
 
 def createQuadrants(x, y, cartoPrecision, innerRadius, radii, quadrantsNb,debugPrints=False):
 
@@ -97,11 +109,10 @@ class cartoQuerier:
 
 def fitToCarto(point,info):
     new_x=round((point[0]-info["x_range"][0])/info["cellsize"])
-    new_y=round(info["nrows"]-(point[1]-info["y_range"][0])/info["cellsize"])
+    new_y=round(info["nrows"]-(point[1]-info["y_range"][0])/info["cellsize"])-1
     
     return (new_x,new_y)
 
 def isInCarto(x,y,x_range,y_range):
     return x>=x_range[0] and x<=x_range[1] and y>=y_range[0] and y<=y_range[1]
         
-    

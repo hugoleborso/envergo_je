@@ -1,3 +1,5 @@
 __pycache__/
 # too big
 alti_data/
+# always different
+output/
