@@ -5,7 +5,7 @@ import numpy as np
 
 
 from local import main,cartoCreator
-from utils.carto import createQuadrants,loadCarto,getCartoInfo,fitToCarto
+from utils.carto import createQuadrants,loadCarto,getCartoInfo,fitToCarto,saveArrayToCarto
 
 
 def testPlot():
@@ -63,7 +63,7 @@ def testCarto(point):
     plt.colorbar(orientation='vertical')
     plt.show()
 
-def plotAltiCarto(altiCartoFile, title, alpha=1, stretch=1, givenAx=None, colormap=None):
+def plotAltiCarto(altiCartoFile, title, alpha=1, stretch=1, givenAx=None, colormap=None,vmin=None,vmax=None):
     
     if givenAx is None:
         fig = plt.figure()
@@ -90,7 +90,11 @@ def plotAltiCarto(altiCartoFile, title, alpha=1, stretch=1, givenAx=None, colorm
         plt.imshow(H,alpha=alpha,cmap=mpl.colormaps['gist_earth'],vmin = -50,vmax = 100)
         cbar = plt.colorbar()
         cbar.ax.set_ylabel('altitude en m', rotation=270)
-        
+    
+    elif colormap:
+        plt.imshow(H,alpha=alpha,cmap=mpl.colormaps[colormap],vmin=vmin,vmax=vmax)
+        plt.colorbar()
+    
     else:
         plt.imshow(H,alpha=alpha)
         plt.colorbar()
@@ -110,33 +114,82 @@ def testCartoCreator(bottomLeft, outputCartoPrecision, inputCartoPrecision, widt
     carte = 'local/alti_data/RGEALTI_FXX_0'+str(bottomLeft[0]//1000)+'_'+str(bottomLeft[1]//1000+5)+'_MNT_LAMB93_IGN69.asc'
     bassinVersantPlot(carte, ouptutFile, ouptutScreenShot)
 
-def bassinVersantPlot(altiFile, bassinVersantFile, savePng):
-    title = 'Bassin versant \n1 unité = 5m'
+def bassinVersantPlot(altiFile, bassinVersantFile, savePng, title='Bassin versant \n1 unité = 5m'):
     ax = plotAltiCarto(altiFile,title,colormap='alti')
     ax = plotAltiCarto(bassinVersantFile,title,alpha=0.5,stretch=4,colormap='bassinVersant',givenAx=ax)
     plt.savefig(savePng,dpi=500)
 
     plt.show()
+
+def compareCartos(carto1,carto2,stretch=(1,1)):
+    c1 = np.repeat(np.repeat(loadCarto(carto1),stretch[0], axis=0), stretch[0], axis=1)
+    c2 = np.repeat(np.repeat(loadCarto(carto2),stretch[1], axis=0), stretch[1], axis=1)
+    carName1 = carto1.split('/')[-1].split('.')[0]
+    carName2 = carto2.split('/')[-1].split('.')[0]
+    diff = c1-c2
+    print("stats c1 : moyenne : ",np.mean(c1),"ecart type : ",np.std(c1))
+    print("stats c2 : moyenne : ",np.mean(c2),"ecart type : ",np.std(c2))
+    print('abs diff moyenne :',np.mean(np.abs(diff)))
+    saveArrayToCarto(np.abs(diff)/c1,'local/output/diff_'+carName1+'_'+carName2+'.asc',getCartoInfo(carto1))
+    ax = plotAltiCarto('local/output/diff_'+carName1+'_'+carName2+'.asc',title='Pourcentage de différence : '+carName1+' et  '+carName2,alpha=1,colormap='Reds',vmin = 0,vmax = 10)
+    plt.savefig('local/output/diff_'+carName1+'_'+carName2+'.png',dpi=500)
+
+    plt.show()
     
+
 # stressTest()
 # testCarto((334155,6701650))
 # print(main([(334155,6701650)],5,25,[50,75,100,130,160],8,0.05))
 
-testCartoCreator(
-    bottomLeft = (285000,6705000),
-    outputCartoPrecision = 20,
-    inputCartoPrecision = 20,
-    width = 250,
-    height = 250,
-    ouptutFile = 'local/output/test.asc',
-    ouptutScreenShot = 'local/output/test.png',
-    innerRadius = 25,
-    radii = [50,75,100,130,160],
-    quadrantsNb = 8,
-    slope = 0.05
-    )
+generateCartos = False
+if generateCartos:
+    name = 'test_20_20_8'
+    testCartoCreator(
+        bottomLeft = (285000,6705000),
+        outputCartoPrecision = 20,
+        inputCartoPrecision = 20,
+        width = 250,
+        height = 250,
+        ouptutFile = 'local/output/'+name+'.asc',
+        ouptutScreenShot = 'local/output/'+name+'.png',
+        innerRadius = 25,
+        radii = [50,75,100,130,160],
+        quadrantsNb = 8,
+        slope = 0.05
+        )
+    name = 'test_20_20_12'
+    testCartoCreator(
+        bottomLeft = (285000,6705000),
+        outputCartoPrecision = 20,
+        inputCartoPrecision = 20,
+        width = 250,
+        height = 250,
+        ouptutFile = 'local/output/'+name+'.asc',
+        ouptutScreenShot = 'local/output/'+name+'.png',
+        innerRadius = 25,
+        radii = [50,75,100,130,160],
+        quadrantsNb = 12,
+        slope = 0.05
+        )
+    name = 'test_20_5_12'
+    testCartoCreator(
+        bottomLeft = (285000,6705000),
+        outputCartoPrecision = 20,
+        inputCartoPrecision = 5,
+        width = 250,
+        height = 250,
+        ouptutFile = 'local/output/'+name+'.asc',
+        ouptutScreenShot = 'local/output/'+name+'.png',
+        innerRadius = 25,
+        radii = [50,75,100,130,160],
+        quadrantsNb = 12,
+        slope = 0.05
+        )
 
-# bassinVersantPlot()
+compareCartos('local/output/test_20_20_8.asc','local/output/test_20_20_12.asc')
+compareCartos('local/output/test_20_20_12.asc','local/output/test_20_5_12.asc')
+
+# # bassinVersantPlot()
 
 
 
