@@ -127,11 +127,12 @@ def compareCartos(carto1,carto2,stretch=(1,1)):
     carName1 = carto1.split('/')[-1].split('.')[0]
     carName2 = carto2.split('/')[-1].split('.')[0]
     diff = c1-c2
+    print('\n ====== Comparaison : '+carName1+' et  '+carName2+' ======')
     print("stats c1 : moyenne : ",np.mean(c1),"ecart type : ",np.std(c1))
     print("stats c2 : moyenne : ",np.mean(c2),"ecart type : ",np.std(c2))
-    print('abs diff moyenne :',np.mean(np.abs(diff)))
-    saveArrayToCarto(np.abs(diff)/c1,'local/output/diff_'+carName1+'_'+carName2+'.asc',getCartoInfo(carto1))
-    ax = plotAltiCarto('local/output/diff_'+carName1+'_'+carName2+'.asc',title='Pourcentage de différence : '+carName1+' et  '+carName2,alpha=1,colormap='Reds',vmin = 0,vmax = 10)
+    print('abs diff moyenne :',np.mean(np.abs(diff)),'\n')
+    saveArrayToCarto(diff,'local/output/diff_'+carName1+'_'+carName2+'.asc',getCartoInfo(carto1))
+    ax = plotAltiCarto('local/output/diff_'+carName1+'_'+carName2+'.asc',title='Pourcentage de différence : '+carName1+' et  '+carName2,alpha=1,colormap='cool',vmin = -10000,vmax = 10000)
     plt.savefig('local/output/diff_'+carName1+'_'+carName2+'.png',dpi=500)
 
     plt.show()
@@ -186,8 +187,23 @@ if generateCartos:
         slope = 0.05
         )
 
-compareCartos('local/output/test_20_20_8.asc','local/output/test_20_20_12.asc')
-compareCartos('local/output/test_20_20_12.asc','local/output/test_20_5_12.asc')
+# compareCartos('local/output/test_20_20_8.asc','local/output/test_20_20_12.asc')
+# compareCartos('local/output/test_20_20_12.asc','local/output/test_20_5_12.asc')
+
+name = 'test_25_10_12'
+testCartoCreator(
+    bottomLeft = (285000,6705000),
+    outputCartoPrecision = 25,
+    inputCartoPrecision = 10,
+    width = 200,
+    height = 200,
+    ouptutFile = 'local/output/'+name+'.asc',
+    ouptutScreenShot = 'local/output/'+name+'.png',
+    innerRadius = 25,
+    radii = [50,75,100,130,160],
+    quadrantsNb = 12,
+    slope = 0.05
+    )
 
 # # bassinVersantPlot()
 
