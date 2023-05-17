@@ -1,7 +1,6 @@
 from utils.bassin_versant import localMultiCircleBassinVersant
 from utils.carto import cartoQuerier,createQuadrants,saveListToCarto
 from tqdm import tqdm
-
 def main(points,cartoPrecision, innerRadius, radii, quadrantsNb,slope):
     results = []
     cartoMachine = cartoQuerier('local/alti_data/')
@@ -17,14 +16,14 @@ def main(points,cartoPrecision, innerRadius, radii, quadrantsNb,slope):
                 quadrants[q][i]=cartoMachine.queryAlti(quadrantsPoints[q][i])
 
         innerCircleAlti = cartoMachine.queryAlti(innerCirclePoints)
-        results.append(localMultiCircleBassinVersant(innerCircleAlti,quadrants,radii,quadrantsNb,slope))
+        results.append((point,localMultiCircleBassinVersant(innerCircleAlti,quadrants,radii,quadrantsNb,slope)))
     
     return results
 
 
 def cartoCreator(bottomLeft, outputCartoPrecision, inputCartoPrecision, width, height, ouptutFile, innerRadius, radii, quadrantsNb, slope):
     points = []
-    for y in range(height-1,-1,-1):
+    for y in range(height):
         for x in range(width):
             points.append((round(bottomLeft[0]+x*outputCartoPrecision),round(bottomLeft[1]+y*outputCartoPrecision)))
     

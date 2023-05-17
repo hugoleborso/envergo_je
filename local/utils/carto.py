@@ -20,8 +20,25 @@ def getCartoInfo(fileName):
 def loadCarto(fileName):
     return np.loadtxt(fileName, skiprows=6)
 
-def saveListToCarto(list,fileName,info):
-    saveArrayToCarto(np.reshape(list, (info["ncols"],info["nrows"])),fileName,info)
+def saveListToCarto(data_list,fileName,info):
+    # Extract coordinates and altitudes separately
+    coordinates = [element[0] for element in data_list]
+    altitudes = [element[1] for element in data_list]
+
+    # Convert coordinates and altitudes to numpy arrays
+    coordinates_array = np.array(coordinates)
+    altitudes_array = np.array(altitudes)
+
+    # Create the 2D numpy array with coordinates as indices and altitudes as values
+    x_coords, y_coords = coordinates_array.T
+    num_x = len(np.unique(x_coords))
+    num_y = len(np.unique(y_coords))
+    result_array = np.zeros((num_y,num_x ))
+    x_indices = np.searchsorted(np.unique(x_coords), x_coords)
+    y_indices = num_y - 1 - np.searchsorted(np.unique(y_coords), y_coords) 
+    result_array[y_indices, x_indices] = altitudes_array  
+
+    saveArrayToCarto(np.reshape(result_array, (info["ncols"],info["nrows"])),fileName,info)
 
 def saveArrayToCarto(array,fileName,info):
     header = "ncols     %s\n" % info["ncols"]

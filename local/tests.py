@@ -115,8 +115,10 @@ def testCartoCreator(bottomLeft, outputCartoPrecision, inputCartoPrecision, widt
     bassinVersantPlot(carte, ouptutFile, ouptutScreenShot)
 
 def bassinVersantPlot(altiFile, bassinVersantFile, savePng, title='Bassin versant \n1 unité = 5m'):
+    bassinVersantFileInfo = getCartoInfo(bassinVersantFile)
+    altiFileInfo = getCartoInfo(altiFile)
     ax = plotAltiCarto(altiFile,title,colormap='alti')
-    ax = plotAltiCarto(bassinVersantFile,title,alpha=0.5,stretch=4,colormap='bassinVersant',givenAx=ax)
+    ax = plotAltiCarto(bassinVersantFile,title,alpha=0.5,stretch=round(altiFileInfo["nrows"]/bassinVersantFileInfo["nrows"]),colormap='bassinVersant',givenAx=ax)
     plt.savefig(savePng,dpi=500)
 
     plt.show()
@@ -190,13 +192,13 @@ if generateCartos:
 # compareCartos('local/output/test_20_20_8.asc','local/output/test_20_20_12.asc')
 # compareCartos('local/output/test_20_20_12.asc','local/output/test_20_5_12.asc')
 
-name = 'test_25_10_12'
+name = 'test_50_20_12'
 testCartoCreator(
     bottomLeft = (285000,6705000),
-    outputCartoPrecision = 25,
-    inputCartoPrecision = 10,
-    width = 200,
-    height = 200,
+    outputCartoPrecision = 50,
+    inputCartoPrecision = 20,
+    width = 100,
+    height = 100,
     ouptutFile = 'local/output/'+name+'.asc',
     ouptutScreenShot = 'local/output/'+name+'.png',
     innerRadius = 25,
