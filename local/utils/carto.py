@@ -107,10 +107,10 @@ class cartoQuerier:
             if isInCarto(maxX,maxY,c['x_range'],c['y_range']) or isInCarto(minX,maxY,c['x_range'],c['y_range']) or isInCarto(maxX,minY,c['x_range'],c['y_range']) or isInCarto(minX,minY,c['x_range'],c['y_range']):
                 if not any(item[0] == c['fileName'] for item in self.loadedCartos ):
                     self.loadedCartos.append((c['fileName'],c,loadCarto(c['fileName'])))
-            else : 
-                if any(item[0] == c['fileName'] for item in self.loadedCartos ):
-                    removeIndex = [c[0] for c in self.loadedCartos].index(c['fileName'])
-                    del self.loadedCartos[removeIndex]
+            # else : 
+            #     if any(item[0] == c['fileName'] for item in self.loadedCartos ):
+            #         removeIndex = [c[0] for c in self.loadedCartos].index(c['fileName'])
+            #         del self.loadedCartos[removeIndex]
                     
     def queryAlti(self,points):
         altis = []

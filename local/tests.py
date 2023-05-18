@@ -192,13 +192,13 @@ if generateCartos:
 # compareCartos('local/output/test_20_20_8.asc','local/output/test_20_20_12.asc')
 # compareCartos('local/output/test_20_20_12.asc','local/output/test_20_5_12.asc')
 
-name = 'test_50_20_12'
+name = 'test_20_10_12'
 testCartoCreator(
     bottomLeft = (285000,6705000),
-    outputCartoPrecision = 50,
-    inputCartoPrecision = 20,
-    width = 100,
-    height = 100,
+    outputCartoPrecision = 20,
+    inputCartoPrecision = 10,
+    width = 500,
+    height = 500,
     ouptutFile = 'local/output/'+name+'.asc',
     ouptutScreenShot = 'local/output/'+name+'.png',
     innerRadius = 25,
