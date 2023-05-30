@@ -1,5 +1,4 @@
 import numpy as np
-from math import pi,ceil,inf
 import os
 
 
@@ -18,7 +17,10 @@ def getCartoInfo(fileName):
     return info
 
 def loadCarto(fileName):
-    return np.loadtxt(fileName, skiprows=6)
+    info = getCartoInfo(fileName)
+    carto = np.loadtxt(fileName, skiprows=6)
+    carto[carto==info["NODATA_value"]]=np.nan
+    return carto
 
 def saveListToCarto(data_list,fileName,info):
     # Extract coordinates and altitudes separately
@@ -47,49 +49,50 @@ def saveArrayToCarto(array,fileName,info):
     header += "yllcorner %s\n" % info["yllcorner"]
     header += "cellsize %s\n" % info["cellsize"]
     header += "NODATA_value %s\n" % info["NODATA_value"]
+    array[np.isnan(array) | (array == None)]=float(info["NODATA_value"])
     
     np.savetxt(fileName, array, header=header, fmt="%1.2f")
 
-def createQuadrants(x, y, cartoPrecision, innerRadius, radii, quadrantsNb,debugPrints=False):
-
-    quarterPointsNb = ceil(radii[-1]/cartoPrecision)
-    quadrantsBins = np.linspace(0,2*pi,quadrantsNb+1)
-    quadrants = {q:{r:[] for r in range(len(radii))} for q in range(quadrantsNb)}
+def createQuadrants(cartoPrecision, innerRadius, radii, quadrantsNb, debugPrints=False):
+    quarterPointsNb = int(np.ceil(radii[-1] / cartoPrecision))
+    quadrantsBins = np.linspace(0, 2 * np.pi, quadrantsNb + 1)
+    quadrants = [[[] for _ in range(len(radii))] for _ in range(quadrantsNb)]
     innerAltiPoints = []
     allPoints = []
 
-    origin = complex(x,y)
+    points = np.mgrid[-quarterPointsNb:quarterPointsNb + 1, -quarterPointsNb:quarterPointsNb + 1]
+    displacements = cartoPrecision * points
+    # new_points = origin + displacements[0] + 1j * displacements[1]
+    new_points = displacements[0] + 1j * displacements[1]
     
-    # generate the points using the complex plane
-    for i in range(-quarterPointsNb,quarterPointsNb+1):
-        for j in range(-quarterPointsNb,quarterPointsNb+1):
-            
-            # create the displacement
-            disp = complex(cartoPrecision*i,cartoPrecision*j)
-            new_point = origin+disp
-            # find the corresponding 'donut'
-            radiusNb = next(i for i,r in enumerate([innerRadius]+ radii+[inf]) if abs(disp) <= r)
-            
-            # if we are in a 'donut' 
-            if radiusNb !=0 and radiusNb<=len(radii):
-                
-                # find the right quadrant (only using the displacement, not the new point)
-                quadNb = np.digitize(np.angle(complex(round(disp.real),round(disp.imag)))%(2*pi),quadrantsBins)-1
-                
-                if debugPrints:
-                    print('displace',disp,'radius',radiusNb)
-                    print('pt:',round(new_point.real),round(new_point.imag),'angle',np.angle(disp)%(2*pi),'quad',quadNb)
-                    print(str(quadrants[quadNb][radiusNb-1]))
-                
-                # adding the coordinates of the new point (int format to prevent floating point errors)
-                quadrants[quadNb][radiusNb-1].append((round(new_point.real),round(new_point.imag)))
-                allPoints.append((round(new_point.real),round(new_point.imag)))
-            
-            # if we are in the inner disk    
-            if not radiusNb:
-                innerAltiPoints.append((round(new_point.real),round(new_point.imag)))
-            
-    return innerAltiPoints,quadrants,allPoints
+    # find the corresponding 'donut' for each point
+    distances = np.abs(new_points)
+    radiusNbs = np.searchsorted(np.concatenate(([innerRadius], radii, [np.inf])), distances)
+    
+    # find the quadrant for each point
+    angles = np.angle(new_points) % (2 * np.pi)
+    quadNbs = np.digitize(angles, quadrantsBins) - 1
+    
+    # process the points based on their quadrant and radius using the masks
+    for quadNb in range(quadrantsNb):
+        for radiusNb in range(len(radii)):
+            mask = np.logical_and(quadNbs == quadNb, radiusNbs == radiusNb + 1)
+            quad_points = new_points[mask]
+            quadrants[quadNb][radiusNb].extend(zip(np.round(quad_points.real).astype(int), np.round(quad_points.imag).astype(int)))
+            # Convert the extended points to a NumPy array
+            quadrants[quadNb][radiusNb] = np.array(quadrants[quadNb][radiusNb], dtype=np.int32)
+            allPoints.extend(zip(np.round(quad_points.real).astype(int), np.round(quad_points.imag).astype(int)))
+    
+    allPoints=np.array(allPoints)
+    inner_points = np.array(new_points[radiusNbs == 0])
+    innerAltiPoints.extend(zip(np.round(inner_points.real).astype(int), np.round(inner_points.imag).astype(int)))
+    
+    
+    #idea : send points without origin, add origin afterwards
+    return innerAltiPoints, quadrants, allPoints
+
+def updateOrigin(origin,points):
+    return np.add(points, origin)
 
 class cartoQuerier:
     def __init__(self,carto_dir) -> None:
@@ -99,6 +102,7 @@ class cartoQuerier:
             self.availableCartos.append(getCartoInfo(carto_dir+'/'+file))
     
     def loadNeededCartos(self,allPoints):
+        
         maxX,minX= max(allPoints, key=lambda x: x[0])[0],min(allPoints, key=lambda x: x[0])[0]
         maxY,minY= max(allPoints, key=lambda x: x[1])[1],min(allPoints, key=lambda x: x[1])[1]
         
@@ -107,10 +111,7 @@ class cartoQuerier:
             if isInCarto(maxX,maxY,c['x_range'],c['y_range']) or isInCarto(minX,maxY,c['x_range'],c['y_range']) or isInCarto(maxX,minY,c['x_range'],c['y_range']) or isInCarto(minX,minY,c['x_range'],c['y_range']):
                 if not any(item[0] == c['fileName'] for item in self.loadedCartos ):
                     self.loadedCartos.append((c['fileName'],c,loadCarto(c['fileName'])))
-            # else : 
-            #     if any(item[0] == c['fileName'] for item in self.loadedCartos ):
-            #         removeIndex = [c[0] for c in self.loadedCartos].index(c['fileName'])
-            #         del self.loadedCartos[removeIndex]
+
                     
     def queryAlti(self,points):
         altis = []
@@ -118,12 +119,9 @@ class cartoQuerier:
             for (_,info,data) in self.loadedCartos:
                 if isInCarto(point[0],point[1],info['x_range'],info['y_range']):
                     new_point=fitToCarto(point,info)
-                    alti = data[new_point[1],new_point[0]]
-                    
-                    if alti == info['NODATA_value']:
-                        alti=None
-                    altis.append(alti)
-        return altis
+                    altis.append(data[new_point[1],new_point[0]])
+
+        return np.mean(altis)
 
 def fitToCarto(point,info):
     new_x=round((point[0]-info["x_range"][0])/info["cellsize"])
