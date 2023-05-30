@@ -1,10 +1,9 @@
 from math import pi
-import numpy as np
 
 def localMultiCircleBassinVersant(innerCircleAlti,quadrants,radii,quadrantsNb,slope):
     surfaceCount=0
     
-    innerCircleMeanAlti = getMeanAlti(innerCircleAlti)
+    innerCircleMeanAlti = innerCircleAlti
     
     for quadrant in quadrants:
         surfaceCount += nextQuadrantCheck(innerCircleMeanAlti,quadrant,radii,slope=slope)
@@ -16,7 +15,7 @@ def nextQuadrantCheck(currentAlti,quadrant,radii,index=0,surface=0,slope=0.05):
     if index==len(quadrant):
         return surface
     
-    meanAlti = getMeanAlti(quadrant[index])
+    meanAlti = quadrant[index]
     if checkElevationDiff(meanAlti,currentAlti,index,radii,slope):
         surface+=getSurface(index,radii)
         return nextQuadrantCheck(meanAlti,quadrant,radii,index=index+1,surface=surface,slope=slope)
@@ -34,8 +33,4 @@ def getSurface(index,radii):
         return pi*radii[index]**2
     else:
         return pi*radii[index]**2-pi*radii[index-1]**2
-
-def getMeanAlti(altiList):
-    return np.mean(altiList)
-
 
