@@ -121,7 +121,7 @@ def compareCartos(carto1,carto2,stretch=(1,1)):
 
     plt.show()
     
-def compareCartosV2(carto1,carto2,barre1,barre2,stretch=(1,1),interactive=False):
+def compareCartosV2(carto1,carto2,barre1,barre2,stretch=(1,1),interactive=False,saveDir=None):
     def transform_array(arr):
         result = np.zeros_like(arr)  # Create an array of zeros with the same shape as input
 
@@ -140,10 +140,10 @@ def compareCartosV2(carto1,carto2,barre1,barre2,stretch=(1,1),interactive=False)
     diffCategory = transform_array(c1)-transform_array(c2)
     diff = c1-c2
     changes = np.where(diffCategory == 0, 0, diff)
-    
-    saveDir = 'local/output/decision/'+carName1+'_'+carName2+'_proj'+str(10000-barre2)
+    if saveDir is None:
+        saveDir = 'local/output/decision/'+carName1+'_'+carName2+'_proj'+str(10000-barre2)
     if not Path(saveDir).exists():
-        os.mkdir(saveDir)
+        os.makedirs(saveDir)
     
     
     textResult = ""
@@ -162,38 +162,38 @@ def compareCartosV2(carto1,carto2,barre1,barre2,stretch=(1,1),interactive=False)
     #Plot the normal diff
     file = saveDir+'/'+'diff'
     saveArrayToCarto(diff,file+'.asc',getCartoInfo(carto1))
-    ax = plotAltiCarto(file+'.asc',title='Différence absolue :\n'+carName1+' et  '+carName2,alpha=1,colormap='RdBu',vmax=3000,vmin=-3000)
-    plt.savefig(file+'.png',dpi=500)
+    ax = plotAltiCarto(file+'.asc',title='Différence absolue :\n'+carName1+'\n et \n'+carName2,alpha=1,colormap='RdBu',vmax=3000,vmin=-3000)
+    plt.savefig(file+'.png',dpi=500,bbox_inches='tight')
     plt.clf()
     
     #Plot the percentage diff
     file = saveDir+'/'+'diff_percentage'
     saveArrayToCarto(diff/c1,file+'.asc',getCartoInfo(carto1))
-    ax = plotAltiCarto(file+'.asc',title='Différence absolue :\n'+carName1+' et  '+carName2,alpha=1,colormap='RdBu',vmax=3000,vmin=-3000)
-    plt.savefig(file+'.png',dpi=500)
+    ax = plotAltiCarto(file+'.asc',title='Différence pourcentage :\n'+carName1+'\n et \n'+carName2,alpha=1,colormap='RdBu',vmax=0.50,vmin=-0.50)
+    plt.savefig(file+'.png',dpi=500,bbox_inches='tight')
     plt.clf()
     
     #Plot the decision diff
     file = saveDir+'/'+'decision_diff'
     saveArrayToCarto(diffCategory,file+'.asc',getCartoInfo(carto1))
-    ax = plotAltiCarto(file+'.asc',title='Différence de décision :\n'+carName1+' et  '+carName2,alpha=1,colormap='decision')
-    plt.savefig(file+'.png',dpi=500)
+    ax = plotAltiCarto(file+'.asc',title='Différence de décision :\n'+carName1+'\n et \n'+carName2,alpha=1,colormap='decision')
+    plt.savefig(file+'.png',dpi=500,bbox_inches='tight')
     plt.clf()
     
     #Plot the diff when the decision was changed
     file = saveDir+'/'+'decision__changes_diff'
     saveArrayToCarto(changes,file+'.asc',getCartoInfo(carto1))
-    ax = plotAltiCarto(file+'.asc',title='Valeur de la différence menant à un changement de catégorie\npour: '+carName1+' et  '+carName2,alpha=1,colormap='RdBu',vmax=3000,vmin=-3000)
-    plt.savefig(file+'.png',dpi=500)
+    ax = plotAltiCarto(file+'.asc',title='Valeur de la différence menant à un changement de catégorie\npour: '+carName1+'\n et \n'+carName2,alpha=1,colormap='RdBu',vmax=3000,vmin=-3000)
+    plt.savefig(file+'.png',dpi=500,bbox_inches='tight')
     plt.clf()
     
     
     unique_values, value_counts = np.unique(diffCategory, return_counts=True)
     non_zero_values = unique_values[unique_values != 0]
-    non_zero_counts = value_counts[unique_values != 0]
+    non_zero_counts = value_counts[unique_values != 0]/(diffCategory.shape[0]*diffCategory.shape[1])
     plt.bar(non_zero_values, non_zero_counts)
-    plt.title('Répartition des changements de catégorie\npour: '+carName1+' et  '+carName2)
-    plt.savefig(saveDir+'/'+'decision__changes_rep'+'.png',dpi=500)
+    plt.title('Répartition des changements de catégorie\npour: '+carName1+'\n et \n'+carName2)
+    plt.savefig(saveDir+'/'+'decision__changes_rep'+'.png',dpi=500,bbox_inches='tight')
     plt.clf()
 
 
@@ -265,7 +265,6 @@ def runTests():
         compareCartosV2(testDir+'test_20_20_8.asc',testDir+'test_20_5_12.asc',5000,8000,stretch=(1,1))
         compareCartosV2(testDir+'test_20_10_12.asc',testDir+'test_20_5_12.asc',5000,8000,stretch=(1,1))
 
-
     generateOneCarto = False
     if generateOneCarto:
         name = 'test_20_5_12'
@@ -293,7 +292,7 @@ def runTests():
         plotAltiCarto('local/output/bigCarto.asc', 'bigCarto')
         plt.show()
         
-    createBulkCarto = True
+    createBulkCarto = False
     if createBulkCarto:
         bulkCartoCreator('local/alti_data',"local/output/bulk_bv")
 
