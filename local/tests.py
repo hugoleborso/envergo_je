@@ -1,10 +1,13 @@
+import os 
+from pathlib import Path
+from matplotlib.colors import ListedColormap
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 import time
 import numpy as np
 
-
-from local import main,cartoCreator,bulkCartoCreator
+from utils import cartoOneTile
+from local import main,cartoCreator,bulkCartoCreator,cartoCreatorFaster
 from utils.carto import createQuadrants,loadCarto,getCartoInfo,fitToCarto,saveArrayToCarto
 
 
@@ -29,21 +32,21 @@ def plotQuadrants(innerAtli, quads, radii, qNb):
 
     plt.show()
 
-def testCarto(point):
+def testCarto(point,altiFile='local/alti_data//RGEALTI_FXX_0330_6705_MNT_LAMB93_IGN69.asc'):
     allColors=True
     qNb = 10
     radii = [50,75,100,130,160]
     innerRadius = 25
     slope = 0.05
     innerAlti,quads,allPoints = createQuadrants(point[0],point[1],5,innerRadius,radii,qNb)
-    newAllPoints = [fitToCarto(p,getCartoInfo('local/alti_data//RGEALTI_FXX_0330_6705_MNT_LAMB93_IGN69.asc'))for p in allPoints]
+    newAllPoints = [fitToCarto(p,getCartoInfo(altiFile))for p in allPoints]
     fig = plt.figure(figsize=(6, 3.2))
     ax = fig.add_subplot(111)
     res = main([point],5,innerRadius,radii,qNb,slope)
     plotAltiCarto(
-        'local/alti_data//RGEALTI_FXX_0330_6705_MNT_LAMB93_IGN69.asc',
+        altiFile,
         'Alti and zones considered for the algo (1x = 5m)\nResult is '+str(res[0]),
-        ax)
+        givenAx=ax)
     
     if allColors:
         # not working but only for demo
@@ -87,16 +90,17 @@ def plotAltiCarto(altiCartoFile, title, alpha=1, stretch=1, givenAx=None, colorm
         cbar.ax.set_ylabel('surface de bassin versant en m2', rotation=270)
         
     elif colormap=='alti':
-        plt.imshow(H,alpha=alpha,cmap=mpl.colormaps['gist_earth'],vmin = -50,vmax = 100)
+        
+        plt.imshow(H,alpha=alpha,cmap=ListedColormap(mpl.colormaps['gist_earth'](np.linspace(0.25, 0.85, 155))))
         cbar = plt.colorbar()
         cbar.ax.set_ylabel('altitude en m', rotation=270)
         
     elif colormap=='decision':
-        cmap = mpl.colors.ListedColormap(['red', 'orange','white','pink','purple'])
+        cmap = mpl.colors.ListedColormap(['black','red', 'orange','white','pink','purple','black',])
         my_cmap = cmap(np.arange(cmap.N))
         # my_cmap[:,-1] = [0,1,0.7]
         my_cmap = mpl.colors.ListedColormap(my_cmap)
-        bounds=[-10,-2,-0.5,0.5,2,10]
+        bounds=[-10,-8,-2,-0.5,0.5,2,8,10]
         norm = mpl.colors.BoundaryNorm(bounds, cmap.N)
         plt.imshow(H,alpha=alpha,cmap=my_cmap,norm=norm)
         cbar = plt.colorbar()
@@ -119,21 +123,24 @@ def stressTest():
     total = t1-t0
     print('total time : ',total)
 
-def testCartoCreator(bottomLeft, outputCartoPrecision, inputCartoPrecision, width, height, ouptutFile, ouptutScreenShot, innerRadius, radii, quadrantsNb, slope):
-    cartoCreator(bottomLeft, outputCartoPrecision, inputCartoPrecision, width, height, ouptutFile, innerRadius, radii, quadrantsNb, slope)
-    carte = 'local/alti_data/RGEALTI_FXX_0'+str(bottomLeft[0]//1000)+'_'+str(bottomLeft[1]//1000+5)+'_MNT_LAMB93_IGN69.asc'
-    bassinVersantPlot(carte, ouptutFile, ouptutScreenShot)
+def testCartoCreator(bottomLeft, outputCartoPrecision, inputCartoPrecision, width, height, ouptutFile, ouptutScreenShot, innerRadius, radii, quadrantsNb, slope, inputFolder,show=False):
+    cartoCreator(bottomLeft, outputCartoPrecision, inputCartoPrecision, width, height, ouptutFile, innerRadius, radii, quadrantsNb, slope, inputFolder)
+    carte = inputFolder+'/RGEALTI_FXX_0'+str(bottomLeft[0]//1000)+'_'+str(bottomLeft[1]//1000+5)+'_MNT_LAMB93_IGN69.asc'
+    bassinVersantPlot(carte, ouptutFile, ouptutScreenShot,show=show)
 
-def bassinVersantPlot(altiFile, bassinVersantFile, savePng, title='Bassin versant \n1 unité = 5m'):
+def testCartoCreatorFaster(bottomLeft,currentTile, outputCartoPrecision, inputCartoPrecision, width, height, ouptutFile, ouptutScreenShot, innerRadius, radii, quadrantsNb, slope, inputFolder,show=False):
+    cartoCreatorFaster(bottomLeft,currentTile, outputCartoPrecision, inputCartoPrecision, width, height, ouptutFile, innerRadius, radii, quadrantsNb, slope, inputFolder)
+    carte = currentTile
+    bassinVersantPlot(carte, ouptutFile, ouptutScreenShot,show=show)
+
+def bassinVersantPlot(altiFile, bassinVersantFile, savePng, title='Bassin versant \n1 unité = 5m',show=True):
     bassinVersantFileInfo = getCartoInfo(bassinVersantFile)
     altiFileInfo = getCartoInfo(altiFile)
-    print(round(1000/altiFileInfo["nrows"]))
     ax = plotAltiCarto(altiFile,title,colormap='alti',stretch=round(1000/altiFileInfo["nrows"]))
-    print(round(1000/bassinVersantFileInfo["nrows"]))
     ax = plotAltiCarto(bassinVersantFile,title,alpha=0.5,stretch=round(1000/bassinVersantFileInfo["nrows"]),colormap='bassinVersant',givenAx=ax)
     plt.savefig(savePng,dpi=500)
-
-    plt.show()
+    if show:
+        plt.show()
 
 def compareCartos(carto1,carto2,stretch=(1,1)):
     c1 = np.repeat(np.repeat(loadCarto(carto1),stretch[0], axis=0), stretch[0], axis=1)
@@ -151,7 +158,7 @@ def compareCartos(carto1,carto2,stretch=(1,1)):
 
     plt.show()
     
-def compareCartosV2(carto1,carto2,barre1,barre2,stretch=(1,1)):
+def compareCartosV2(carto1,carto2,barre1,barre2,stretch=(1,1),interactive=False):
     def transform_array(arr):
         result = np.zeros_like(arr)  # Create an array of zeros with the same shape as input
 
@@ -160,21 +167,75 @@ def compareCartosV2(carto1,carto2,barre1,barre2,stretch=(1,1)):
         result[arr >= barre2] = 10
 
         return result
-
-    c1 = np.repeat(np.repeat(transform_array(loadCarto(carto1)),stretch[0], axis=0), stretch[0], axis=1)
-    c2 = np.repeat(np.repeat(transform_array(loadCarto(carto2)),stretch[1], axis=0), stretch[1], axis=1)
+        
+    c1 = np.repeat(np.repeat(loadCarto(carto1),stretch[0], axis=0), stretch[0], axis=1)
+    c2 = np.repeat(np.repeat(loadCarto(carto2),stretch[1], axis=0), stretch[1], axis=1)
+    
     carName1 = carto1.split('/')[-1].split('.')[0]
     carName2 = carto2.split('/')[-1].split('.')[0]
+    
+    diffCategory = transform_array(c1)-transform_array(c2)
     diff = c1-c2
-    print('\n ====== Comparaison : '+carName1+' et  '+carName2+' ======')
-    print("stats c1 : moyenne : ",np.mean(c1),"ecart type : ",np.std(c1))
-    print("stats c2 : moyenne : ",np.mean(c2),"ecart type : ",np.std(c2))
-    print('abs diff moyenne :',np.mean(np.abs(diff)),'\n')
-    saveArrayToCarto(diff,'local/output/decision/diff_'+carName1+'_'+carName2+'.asc',getCartoInfo(carto1))
-    ax = plotAltiCarto('local/output/decision/diff_'+carName1+'_'+carName2+'.asc',title='Décision sur la différence : '+carName1+' et  '+carName2,alpha=1,colormap='decision')
-    plt.savefig('local/output/decision/diff_'+carName1+'_'+carName2+'.png',dpi=500)
+    changes = np.where(diffCategory == 0, 0, diff)
+    
+    saveDir = 'local/output/decision/'+carName1+'_'+carName2+'_proj'+str(10000-barre2)
+    if not Path(saveDir).exists():
+        os.mkdir(saveDir)
+    
+    
+    textResult = ""
+    textResult+='\n ====== Comparaison : '+carName1+' et  '+carName2+' ======'+'\n'
+    textResult+="stats c1 : moyenne : "+str(np.mean(c1))+"ecart type : "+str(np.std(c1))+'\n'
+    textResult+="stats c2 : moyenne : "+str(np.mean(c2))+"ecart type : "+str(np.std(c2))+'\n'
+    textResult+='abs diff moyenne :'+str(np.mean(np.abs(diff)))+'\n'
+    textResult+='abs diff category moyenne :'+str(np.mean(np.abs(diffCategory)))+'\n'+'\n'
+    
+    if interactive:
+        print(textResult)
+    with open(saveDir+'/'+'stats_diff.txt', 'w') as f:
+        f.write(textResult)
+    
+    plt.clf()
+    #Plot the normal diff
+    file = saveDir+'/'+'diff'
+    saveArrayToCarto(diff,file+'.asc',getCartoInfo(carto1))
+    ax = plotAltiCarto(file+'.asc',title='Différence absolue :\n'+carName1+' et  '+carName2,alpha=1,colormap='RdBu',vmax=3000,vmin=-3000)
+    plt.savefig(file+'.png',dpi=500)
+    plt.clf()
+    
+    #Plot the percentage diff
+    file = saveDir+'/'+'diff_percentage'
+    saveArrayToCarto(diff/c1,file+'.asc',getCartoInfo(carto1))
+    ax = plotAltiCarto(file+'.asc',title='Différence absolue :\n'+carName1+' et  '+carName2,alpha=1,colormap='RdBu',vmax=3000,vmin=-3000)
+    plt.savefig(file+'.png',dpi=500)
+    plt.clf()
+    
+    #Plot the decision diff
+    file = saveDir+'/'+'decision_diff'
+    saveArrayToCarto(diffCategory,file+'.asc',getCartoInfo(carto1))
+    ax = plotAltiCarto(file+'.asc',title='Différence de décision :\n'+carName1+' et  '+carName2,alpha=1,colormap='decision')
+    plt.savefig(file+'.png',dpi=500)
+    plt.clf()
+    
+    #Plot the diff when the decision was changed
+    file = saveDir+'/'+'decision__changes_diff'
+    saveArrayToCarto(changes,file+'.asc',getCartoInfo(carto1))
+    ax = plotAltiCarto(file+'.asc',title='Valeur de la différence menant à un changement de catégorie\npour: '+carName1+' et  '+carName2,alpha=1,colormap='RdBu',vmax=3000,vmin=-3000)
+    plt.savefig(file+'.png',dpi=500)
+    plt.clf()
+    
+    
+    unique_values, value_counts = np.unique(diffCategory, return_counts=True)
+    non_zero_values = unique_values[unique_values != 0]
+    non_zero_counts = value_counts[unique_values != 0]
+    plt.bar(non_zero_values, non_zero_counts)
+    plt.title('Répartition des changements de catégorie\npour: '+carName1+' et  '+carName2)
+    plt.savefig(saveDir+'/'+'decision__changes_rep'+'.png',dpi=500)
+    plt.clf()
 
-    plt.show()
+
+    if interactive:
+        plt.show()
    
 
 
@@ -183,12 +244,72 @@ def runTests():
     
     runFirstTests = False
     if runFirstTests:
-        stressTest()
-        testCarto((334155,6701650))
-        print(main([(334155,6701650)],5,25,[50,75,100,130,160],8,0.05))
+        # stressTest()
+        testCarto((125678,6840678),altiFile='local/alti_data_29/RGEALTI_FXX_0125_6840_MNT_LAMB93_IGN69.asc')
+        print(main([(125678,6840678)],5,25,[50,75,100,130,160],8,0.05,inputFolder='local/alti_data_29/'))
         
     generateCartos = False
     if generateCartos:
+        
+        name = 'test_20_20_8_dep39'
+        testCartoCreator(
+            bottomLeft = (890000,6630000),
+            outputCartoPrecision = 20,
+            inputCartoPrecision = 20,
+            width = 250,
+            height = 250,
+            ouptutFile = 'local/output/test/'+name+'.asc',
+            ouptutScreenShot = 'local/output/test/'+name+'.png',
+            innerRadius = 25,
+            radii = [50,75,100,130,160],
+            quadrantsNb = 8,
+            slope = 0.05,
+            inputFolder = 'local/alti_data_39'
+            )
+        name = 'test_20_10_8_dep39'
+        testCartoCreator(
+            bottomLeft = (890000,6630000),
+            outputCartoPrecision = 20,
+            inputCartoPrecision = 10,
+            width = 250,
+            height = 250,
+            ouptutFile = 'local/output/test/'+name+'.asc',
+            ouptutScreenShot = 'local/output/test/'+name+'.png',
+            innerRadius = 25,
+            radii = [50,75,100,130,160],
+            quadrantsNb = 8,
+            slope = 0.05,
+            inputFolder = 'local/alti_data_39'
+            )
+        name = 'test_20_5_12_dep39'
+        testCartoCreator(
+            bottomLeft = (890000,6630000),
+            outputCartoPrecision = 20,
+            inputCartoPrecision = 5,
+            width = 250,
+            height = 250,
+            ouptutFile = 'local/output/test/'+name+'.asc',
+            ouptutScreenShot = 'local/output/test/'+name+'.png',
+            innerRadius = 25,
+            radii = [50,75,100,130,160],
+            quadrantsNb = 12,
+            slope = 0.05,
+            inputFolder = 'local/alti_data_39'
+            )
+    
+    compareCartosGo = False
+    if compareCartosGo:
+        testDir = 'local/output/test/'
+        # compareCartosV2(testDir+'test_20_20_8_dep29.asc',testDir+'test_20_5_12_dep29.asc',5000,8000,stretch=(1,1))
+
+        # compareCartosV2(testDir+'test_20_20_8_dep39.asc',testDir+'test_20_5_12_dep39.asc',5000,8000,stretch=(1,1))
+        # compareCartosV2(testDir+'test_20_10_8_dep39.asc',testDir+'test_20_5_12_dep39.asc',5000,8000,stretch=(1,1))
+
+        compareCartosV2(testDir+'test_20_20_8.asc',testDir+'test_20_5_12.asc',5000,8000,stretch=(1,1))
+        compareCartosV2(testDir+'test_20_10_12.asc',testDir+'test_20_5_12.asc',5000,8000,stretch=(1,1))
+
+    generateOneCarto = False
+    if generateOneCarto:
         name = 'test_20_20_8'
         testCartoCreator(
             bottomLeft = (285000,6705000),
@@ -196,68 +317,48 @@ def runTests():
             inputCartoPrecision = 20,
             width = 250,
             height = 250,
-            ouptutFile = 'local/output/'+name+'.asc',
-            ouptutScreenShot = 'local/output/'+name+'.png',
-            innerRadius = 25,
-            radii = [50,75,100,130,160],
-            quadrantsNb = 8,
-            slope = 0.05
-            )
-        name = 'test_20_20_12'
-        testCartoCreator(
-            bottomLeft = (285000,6705000),
-            outputCartoPrecision = 20,
-            inputCartoPrecision = 20,
-            width = 250,
-            height = 250,
-            ouptutFile = 'local/output/'+name+'.asc',
-            ouptutScreenShot = 'local/output/'+name+'.png',
-            innerRadius = 25,
-            radii = [50,75,100,130,160],
-            quadrantsNb = 12,
-            slope = 0.05
-            )
-        name = 'test_20_5_12'
-        testCartoCreator(
-            bottomLeft = (285000,6705000),
-            outputCartoPrecision = 20,
-            inputCartoPrecision = 5,
-            width = 250,
-            height = 250,
-            ouptutFile = 'local/output/'+name+'.asc',
-            ouptutScreenShot = 'local/output/'+name+'.png',
-            innerRadius = 25,
-            radii = [50,75,100,130,160],
-            quadrantsNb = 12,
-            slope = 0.05
-            )
-
-    compareCartosGo = False
-    if compareCartosGo:
-        compareCartos('local/output/test_20_20_8.asc','local/output/test_20_20_12.asc')
-        compareCartosV2('local/output/test/test_25_20_12.asc','local/output/test/test_20_5_12.asc',5000,8000,stretch=(5,4))
-
-    generateOneCarto = False
-    if generateOneCarto:
-        name = 'test_20_5_12'
-        testCartoCreator(
-            bottomLeft = (285000,6705000),
-            outputCartoPrecision = 25,
-            inputCartoPrecision = 20,
-            width = 200,
-            height = 200,
             ouptutFile = 'local/output/test/'+name+'.asc',
             ouptutScreenShot = 'local/output/test/'+name+'.png',
             innerRadius = 25,
             radii = [50,75,100,130,160],
             quadrantsNb = 8,
             slope = 0.05,
+            inputFolder = 'local/alti_data'
+            )
+        
+    generateOneCartoFaster = True
+    if generateOneCartoFaster:
+        name = 'test_20_5_12'
+        testCartoCreatorFaster(
+            bottomLeft = (285000,6705000),
+            currentTile = 'local/alti_data/RGEALTI_FXX_0285_6710_MNT_LAMB93_IGN69.asc',
+            outputCartoPrecision = 20,
+            inputCartoPrecision = 5,
+            width = 250,
+            height = 250,
+            ouptutFile = 'local/output/test/'+name+'.asc',
+            ouptutScreenShot = 'local/output/test/'+name+'.png',
+            innerRadius = 25,
+            radii = [50,75,100,130,160],
+            quadrantsNb = 12,
+            slope = 0.05,
+            inputFolder = 'local/alti_data',
+            show=True
             )
 
-    createBulkCarto = True
+    testBigCarto = False
+    if testBigCarto:
+        cqot = cartoOneTile.cartoQuerierOneTile('local/alti_data','local/alti_data/RGEALTI_FXX_0285_6710_MNT_LAMB93_IGN69.asc')
+        saveArrayToCarto(cqot.currentBigCarto,'local/output/bigCarto.asc',{"ncols": 3000,"nrows": 3000,"xllcorner": 285000, "yllcorner" : 675000,"cellsize"  :5,"NODATA_value":  -99999.00})
+        plotAltiCarto('local/output/bigCarto.asc', 'bigCarto')
+        plt.show()
+        
+    createBulkCarto = False
     if createBulkCarto:
         bulkCartoCreator('local/alti_data',"local/output/bulk_bv")
 
 
-
 runTests()
+
+# testPlot()
+
