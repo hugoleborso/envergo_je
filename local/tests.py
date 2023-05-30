@@ -1,14 +1,16 @@
 import os 
+import time
+
+import numpy as np
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+
 from pathlib import Path
 from matplotlib.colors import ListedColormap
-import matplotlib.pyplot as plt
-import matplotlib as mpl
-import time
-import numpy as np
 
 from utils import cartoOneTile
-from local import main,cartoCreator,bulkCartoCreator,cartoCreatorFaster
-from utils.carto import createQuadrants,loadCarto,getCartoInfo,fitToCarto,saveArrayToCarto
+from local import main,cartoCreator,bulkCartoCreator
+from utils.carto import createQuadrants,loadCarto,getCartoInfo,saveArrayToCarto
 
 
 def testPlot():
@@ -30,40 +32,6 @@ def plotQuadrants(innerAtli, quads, radii, qNb):
             ax.scatter([1000-p[1]/5 for p in quads[q][i]],[p[0]/5 for p in quads[q][i]],color=colors[q],s=(i+1)**2)
 
 
-    plt.show()
-
-def testCarto(point,altiFile='local/alti_data//RGEALTI_FXX_0330_6705_MNT_LAMB93_IGN69.asc'):
-    allColors=True
-    qNb = 10
-    radii = [50,75,100,130,160]
-    innerRadius = 25
-    slope = 0.05
-    innerAlti,quads,allPoints = createQuadrants(point[0],point[1],5,innerRadius,radii,qNb)
-    newAllPoints = [fitToCarto(p,getCartoInfo(altiFile))for p in allPoints]
-    fig = plt.figure(figsize=(6, 3.2))
-    ax = fig.add_subplot(111)
-    res = main([point],5,innerRadius,radii,qNb,slope)
-    plotAltiCarto(
-        altiFile,
-        'Alti and zones considered for the algo (1x = 5m)\nResult is '+str(res[0]),
-        givenAx=ax)
-    
-    if allColors:
-        # not working but only for demo
-        colors=['blue','purple','red','hotpink','pink','orange','yellow','lime','green','navy']
-        newinnerAlti = [fitToCarto(p,getCartoInfo('local/alti_data//RGEALTI_FXX_0330_6705_MNT_LAMB93_IGN69.asc'))for p in innerAlti]
-        ax.scatter([p[0] for p in newinnerAlti],[p[1] for p in newinnerAlti],color='grey',s=0.1)
-        
-        for q in range(qNb):
-            for i,_ in enumerate(radii):
-                newPoints = [fitToCarto(p,getCartoInfo('local/alti_data//RGEALTI_FXX_0330_6705_MNT_LAMB93_IGN69.asc'))for p in quads[q][i]]
-                ax.scatter([p[0] for p in newPoints],[p[1] for p in newPoints],color=colors[q%len(colors)],edgecolor='none',s=(i+1)**2,alpha=0.5)
-    else:
-        newAllPoints = [fitToCarto(p,getCartoInfo('local/alti_data//RGEALTI_FXX_0330_6705_MNT_LAMB93_IGN69.asc'))for p in allPoints]
-        ax.scatter([p[0] for p in newAllPoints],[p[1] for p in newAllPoints] ) # changer par l'affichage des quadrants si temps suffisant
-    
-    ax.set_aspect('equal')
-    plt.colorbar(orientation='vertical')
     plt.show()
 
 def plotAltiCarto(altiCartoFile, title, alpha=1, stretch=1, givenAx=None, colormap=None,vmin=None,vmax=None):
@@ -123,13 +91,8 @@ def stressTest():
     total = t1-t0
     print('total time : ',total)
 
-def testCartoCreator(bottomLeft, outputCartoPrecision, inputCartoPrecision, width, height, ouptutFile, ouptutScreenShot, innerRadius, radii, quadrantsNb, slope, inputFolder,show=False):
-    cartoCreator(bottomLeft, outputCartoPrecision, inputCartoPrecision, width, height, ouptutFile, innerRadius, radii, quadrantsNb, slope, inputFolder)
-    carte = inputFolder+'/RGEALTI_FXX_0'+str(bottomLeft[0]//1000)+'_'+str(bottomLeft[1]//1000+5)+'_MNT_LAMB93_IGN69.asc'
-    bassinVersantPlot(carte, ouptutFile, ouptutScreenShot,show=show)
-
-def testCartoCreatorFaster(bottomLeft,currentTile, outputCartoPrecision, inputCartoPrecision, width, height, ouptutFile, ouptutScreenShot, innerRadius, radii, quadrantsNb, slope, inputFolder,show=False):
-    cartoCreatorFaster(bottomLeft,currentTile, outputCartoPrecision, inputCartoPrecision, width, height, ouptutFile, innerRadius, radii, quadrantsNb, slope, inputFolder)
+def testCartoCreator(bottomLeft,currentTile, outputCartoPrecision, inputCartoPrecision, width, height, ouptutFile, ouptutScreenShot, innerRadius, radii, quadrantsNb, slope, inputFolder,show=False):
+    cartoCreator(bottomLeft,currentTile, outputCartoPrecision, inputCartoPrecision, width, height, ouptutFile, innerRadius, radii, quadrantsNb, slope, inputFolder)
     carte = currentTile
     bassinVersantPlot(carte, ouptutFile, ouptutScreenShot,show=show)
 
@@ -241,12 +204,6 @@ def compareCartosV2(carto1,carto2,barre1,barre2,stretch=(1,1),interactive=False)
 
 
 def runTests():
-    
-    runFirstTests = False
-    if runFirstTests:
-        # stressTest()
-        testCarto((125678,6840678),altiFile='local/alti_data_29/RGEALTI_FXX_0125_6840_MNT_LAMB93_IGN69.asc')
-        print(main([(125678,6840678)],5,25,[50,75,100,130,160],8,0.05,inputFolder='local/alti_data_29/'))
         
     generateCartos = False
     if generateCartos:
@@ -308,28 +265,11 @@ def runTests():
         compareCartosV2(testDir+'test_20_20_8.asc',testDir+'test_20_5_12.asc',5000,8000,stretch=(1,1))
         compareCartosV2(testDir+'test_20_10_12.asc',testDir+'test_20_5_12.asc',5000,8000,stretch=(1,1))
 
+
     generateOneCarto = False
     if generateOneCarto:
-        name = 'test_20_20_8'
-        testCartoCreator(
-            bottomLeft = (285000,6705000),
-            outputCartoPrecision = 20,
-            inputCartoPrecision = 20,
-            width = 250,
-            height = 250,
-            ouptutFile = 'local/output/test/'+name+'.asc',
-            ouptutScreenShot = 'local/output/test/'+name+'.png',
-            innerRadius = 25,
-            radii = [50,75,100,130,160],
-            quadrantsNb = 8,
-            slope = 0.05,
-            inputFolder = 'local/alti_data'
-            )
-        
-    generateOneCartoFaster = True
-    if generateOneCartoFaster:
         name = 'test_20_5_12'
-        testCartoCreatorFaster(
+        testCartoCreator(
             bottomLeft = (285000,6705000),
             currentTile = 'local/alti_data/RGEALTI_FXX_0285_6710_MNT_LAMB93_IGN69.asc',
             outputCartoPrecision = 20,
@@ -353,12 +293,9 @@ def runTests():
         plotAltiCarto('local/output/bigCarto.asc', 'bigCarto')
         plt.show()
         
-    createBulkCarto = False
+    createBulkCarto = True
     if createBulkCarto:
         bulkCartoCreator('local/alti_data',"local/output/bulk_bv")
 
 
 runTests()
-
-# testPlot()
-

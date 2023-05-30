@@ -1,6 +1,6 @@
 import numpy as np
 import os
-from carto import loadCarto,getCartoInfo
+from utils.carto import loadCarto,getCartoInfo
 
 class cartoQuerierOneTile:
     

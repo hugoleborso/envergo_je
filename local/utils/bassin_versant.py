@@ -1,6 +1,6 @@
 from math import pi
 
-def localMultiCircleBassinVersant(innerCircleAlti,quadrants,radii,quadrantsNb,slope):
+def calc(innerCircleAlti,quadrants,radii,quadrantsNb,slope):
     surfaceCount=0
     
     innerCircleMeanAlti = innerCircleAlti
